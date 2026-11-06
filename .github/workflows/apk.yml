@@ -4,20 +4,57 @@ on:
   push:
     branches:
       - main
+      - feature/floating-pill-bottom-nav
   pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
 
 jobs:
-  assemble_demo_apk:
+  debug_apk:
+    name: Unit tests + Debug APK
     runs-on: ubuntu-latest
     steps:
       - name: Checkout GIT
         uses: actions/checkout@v4
 
-      - name: Setup Java
+      - name: Setup Java SDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'adopt'
-          java-version: '18'
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ivy-Wallet-Debug-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
+  demo_apk:
+    name: Demo APK (main only)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GIT
+        uses: actions/checkout@v4
+
+      - name: Setup Java SDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v4
@@ -25,20 +62,20 @@ jobs:
       - name: Build Demo APK
         run: ./gradlew assembleDemo
 
-      - name: Upload APK to Github Actions
+      - name: Upload Demo APK
         uses: actions/upload-artifact@v4
         with:
           name: Ivy-Wallet-Demo.apk
           path: app/build/outputs/apk/demo/app-demo.apk
+          if-no-files-found: error
 
       - name: Upload APK in Telegram Group
-        if: |
-          github.ref == 'refs/heads/main'
+        continue-on-error: true
         run: |
           COMMIT_LINK="https://github.com/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}"
           COMMIT_MESSAGE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}" | jq -r .commit.message | cut -c 1-100)
           CAPTION=$'Ivy Wallet Demo APK:\n\n'"$COMMIT_MESSAGE"$'\n... see commit at: '"$COMMIT_LINK"
-          
+
           curl -F "chat_id=-1001647280565" \
                -F "document=@app/build/outputs/apk/demo/app-demo.apk" \
                -F "reply_to_message_id=16118" \

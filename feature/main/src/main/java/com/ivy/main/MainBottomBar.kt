@@ -1,9 +1,11 @@
 package com.ivy.main
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -11,8 +13,11 @@ import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -20,6 +25,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,10 +35,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -47,7 +56,6 @@ import com.ivy.legacy.ivyWalletCtx
 import com.ivy.legacy.utils.clickableNoIndication
 import com.ivy.legacy.utils.densityScope
 import com.ivy.legacy.utils.lerp
-import com.ivy.legacy.utils.navigationBarInset
 import com.ivy.legacy.utils.rememberInteractionSource
 import com.ivy.legacy.utils.springBounceFast
 import com.ivy.legacy.utils.toDensityDp
@@ -114,13 +122,32 @@ fun BoxWithConstraintsScope.BottomBar(
         animationSpec = springBounceFast()
     )
 
+    // Collapse the expanded add-menu whenever the selected tab changes.
+    LaunchedEffect(tab) {
+        expanded = false
+    }
+
+    // Floating pill bottom navigation.
     Row(
         modifier = Modifier
-            .fillMaxWidth()
             .align(Alignment.BottomCenter)
-            .background(pureBlur())
-            .alpha(1f - buttonsShownPercent)
+            .fillMaxWidth()
             .navigationBarsPadding()
+            .padding(bottom = 8.dp)
+            .padding(horizontal = 16.dp)
+            .shadow(
+                elevation = 8.dp,
+                shape = UI.shapes.rFull,
+                clip = false
+            )
+            .clip(UI.shapes.rFull)
+            .background(pureBlur(), UI.shapes.rFull)
+            .border(
+                width = 1.dp,
+                color = UI.colors.medium.copy(alpha = 0.4f),
+                shape = UI.shapes.rFull
+            )
+            .alpha(1f - buttonsShownPercent)
             .clickableNoIndication(rememberInteractionSource()) {
                 // consume click
             },
@@ -162,7 +189,8 @@ fun BoxWithConstraintsScope.BottomBar(
 
     // ------------------------------------ BUTTONS--------------------------------------------------
     val fabStartX = ivyContext.screenWidth / 2 - FAB_BUTTON_SIZE.toDensityPx() / 2
-    val fabStartY = ivyContext.screenHeight - navigationBarInset() -
+    val navBarBottom = WindowInsets.navigationBars.getBottom(LocalDensity.current)
+    val fabStartY = ivyContext.screenHeight - navBarBottom -
             30.dp.toDensityPx() - FAB_BUTTON_SIZE.toDensityPx()
 
     TransactionButtons(
@@ -306,7 +334,8 @@ private fun TransactionButtons(
                 }
                 .padding(horizontal = 8.dp)
                 .alpha(buttonsShownPercent)
-                .zIndex(200f),
+                .zIndex(200f)
+                .testTag("add_planned_payment"),
             iconStart = R.drawable.ic_planned_payments,
             text = stringResource(R.string.add_planned_payment),
             solidBackground = true
@@ -381,7 +410,8 @@ private fun AddIncomeButton(
                 }
             }
             .size(FAB_BUTTON_SIZE)
-            .zIndex(200f),
+            .zIndex(200f)
+            .testTag("add_income"),
         icon = R.drawable.ic_income,
         backgroundGradient = GradientGreen,
         tint = White,
@@ -466,7 +496,8 @@ private fun AddExpenseButton(
                 }
             }
             .size(FAB_BUTTON_SIZE)
-            .zIndex(200f),
+            .zIndex(200f)
+            .testTag("add_expense"),
         icon = R.drawable.ic_expense,
         backgroundGradient = gradientExpenses(),
         horizontalGradient = false,
@@ -553,7 +584,8 @@ private fun AddTransferButton(
                 }
             }
             .size(FAB_BUTTON_SIZE)
-            .zIndex(200f),
+            .zIndex(200f)
+            .testTag("add_transfer"),
         icon = R.drawable.ic_transfer,
         backgroundGradient = GradientIvy,
         tint = White,
@@ -617,31 +649,58 @@ private fun RowScope.Tab(
     selectedColor: Color,
     onClick: () -> Unit,
 ) {
+    val iconTint by animateColorAsState(
+        targetValue = if (selected) selectedColor else UI.colors.pureInverse,
+        animationSpec = springBounceFast()
+    )
+
+    val iconScale by animateFloatAsState(
+        targetValue = if (selected) 1.08f else 1f,
+        animationSpec = springBounceFast()
+    )
+
     Row(
         modifier = Modifier
             .weight(1f)
             .clip(UI.shapes.rFull)
             .clickable(onClick = onClick)
+            .defaultMinSize(minHeight = 48.dp)
             .padding(top = 12.dp, bottom = 16.dp)
             .testTag(name.lowercase()),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IvyIcon(
-            icon = icon,
-            tint = if (selected) selectedColor else UI.colors.pureInverse
-        )
-
-        if (selected) {
-            Spacer(modifier = Modifier.width(4.dp))
-
-            Text(
-                text = name,
-                style = UI.typo.c.style(
-                    fontWeight = FontWeight.Bold,
-                    color = selectedColor
-                )
+        Row(
+            modifier = Modifier
+                .clip(UI.shapes.rFull)
+                .thenIf(selected) {
+                    background(
+                        color = selectedColor.copy(alpha = 0.12f),
+                        shape = UI.shapes.rFull
+                    )
+                }
+                .padding(horizontal = 10.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IvyIcon(
+                modifier = Modifier.scale(iconScale),
+                icon = icon,
+                tint = iconTint,
+                contentDescription = name
             )
+
+            if (selected) {
+                Spacer(modifier = Modifier.width(4.dp))
+
+                Text(
+                    text = name,
+                    style = UI.typo.c.style(
+                        fontWeight = FontWeight.Bold,
+                        color = selectedColor
+                    )
+                )
+            }
         }
     }
 }
