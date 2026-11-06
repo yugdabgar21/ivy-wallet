@@ -659,6 +659,8 @@ private fun RowScope.Tab(
         animationSpec = springBounceFast()
     )
 
+    val tabShape = UI.shapes.rFull
+
     Row(
         modifier = Modifier
             .weight(1f)
@@ -672,11 +674,11 @@ private fun RowScope.Tab(
     ) {
         Row(
             modifier = Modifier
-                .clip(UI.shapes.rFull)
+                .clip(tabShape)
                 .thenIf(selected) {
                     background(
                         color = selectedColor.copy(alpha = 0.12f),
-                        shape = UI.shapes.rFull
+                        shape = tabShape
                     )
                 }
                 .padding(horizontal = 10.dp, vertical = 6.dp),
