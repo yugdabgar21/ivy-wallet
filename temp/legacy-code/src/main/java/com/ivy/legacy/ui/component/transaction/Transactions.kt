@@ -365,7 +365,7 @@ private fun LazyListScope.scrollHackSpacer(
             if (trnCount <= 5) {
                 Spacer(Modifier.height(300.dp))
             } else {
-                Spacer(Modifier.height(150.dp))
+                Spacer(Modifier.height(120.dp))
             }
         }
     }

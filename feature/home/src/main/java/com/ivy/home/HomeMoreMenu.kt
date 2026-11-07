@@ -118,7 +118,7 @@ fun BoxWithConstraintsScope.MoreMenu(
 
     val xBase = ivyContext.screenWidth - 24.dp.toDensityPx()
     val yBaseCollapsed = 20.dp.toDensityPx() + statusBarInset()
-    val yBaseExpanded = ivyContext.screenHeight - 48.dp.toDensityPx() - navigationBarInset()
+    val yBaseExpanded = ivyContext.screenHeight - 64.dp.toDensityPx() - navigationBarInset()
 
     val yButton = lerp(
         start = yBaseCollapsed,

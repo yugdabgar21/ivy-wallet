@@ -141,7 +141,7 @@ fun TransactionCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .padding(top = 12.dp)
+            .padding(top = 8.dp)
             .clip(cardShape)
             .clickable {
                 if (baseData.accounts.find { it.id == transaction.accountId } != null) {
@@ -166,7 +166,7 @@ fun TransactionCard(
             baseData.accounts.find { it.id == transaction.toAccountId }?.currency
                 ?: baseData.baseCurrency
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(16.dp))
 
         TransactionHeaderRow(
             transaction = transaction,
@@ -305,7 +305,7 @@ fun TransactionCard(
             TransactionTags(transaction.tags)
         }
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(16.dp))
     }
 }
 

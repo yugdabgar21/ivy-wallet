@@ -383,7 +383,7 @@ fun HomeLazyColumn(
             )
         }
         item {
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(12.dp))
 
             TransactionsDividerLine()
         }

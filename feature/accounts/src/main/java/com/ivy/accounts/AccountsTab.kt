@@ -116,12 +116,12 @@ private fun BoxWithConstraintsScope.UI(
         state = listState
     ) {
         item {
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(20.dp))
 
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Spacer(Modifier.width(24.dp))
+                Spacer(Modifier.width(16.dp))
 
                 Column {
                     Text(
@@ -141,11 +141,11 @@ private fun BoxWithConstraintsScope.UI(
                     )
                 }
 
-                Spacer(Modifier.width(24.dp))
+                Spacer(Modifier.width(16.dp))
             }
             if (!state.hideTotalBalance) {
                 Column {
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(12.dp))
                     IncomeExpensesRow(
                         currency = state.baseCurrency,
                         incomeLabel = stringResource(id = R.string.total_balance),
@@ -154,11 +154,11 @@ private fun BoxWithConstraintsScope.UI(
                         expenses = state.totalBalanceWithExcluded.toDoubleOrNull() ?: 0.00
                     )
                 }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(12.dp))
             }
         }
         items(state.accountsData) {
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(12.dp))
             AccountCard(
                 baseCurrency = state.baseCurrency,
                 accountData = it,
@@ -182,7 +182,7 @@ private fun BoxWithConstraintsScope.UI(
         }
 
         item {
-            Spacer(Modifier.height(150.dp)) // scroll hack
+            Spacer(Modifier.height(120.dp)) // scroll hack
         }
     }
 
@@ -235,7 +235,7 @@ private fun AccountCard(
 
     Column(
         modifier = Modifier
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 12.dp)
             .fillMaxWidth()
             .clip(cardShape)
             .border(2.dp, cardBorder, cardShape)
@@ -310,12 +310,12 @@ private fun AccountHeader(
                 background(baseColor, headerShape)
             }
     ) {
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(12.dp))
 
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Spacer(Modifier.width(20.dp))
+            Spacer(Modifier.width(16.dp))
 
             ItemIconSDefaultIcon(
                 iconName = account.icon?.id,
@@ -378,7 +378,7 @@ private fun AccountHeader(
             )
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(12.dp))
     }
 }
 

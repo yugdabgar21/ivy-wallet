@@ -94,7 +94,7 @@ internal fun HomeHeader(
             label = "Home Header Expand Collapse"
         )
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(12.dp))
 
         HeaderStickyRow(
             percentExpanded = percentExpanded,
@@ -111,7 +111,7 @@ internal fun HomeHeader(
             onSelectPreviousMonth = onSelectPreviousMonth,
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(12.dp))
 
         if (percentExpanded < 0.5f) {
             TransactionsDividerLine(
@@ -139,7 +139,7 @@ private fun HeaderStickyRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.End,
     ) {
@@ -245,7 +245,7 @@ fun CashFlowInfo(
     ) {
         BalanceRow(
             modifier = Modifier
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = 16.dp)
                 .clickableNoIndication(rememberInteractionSource()) {
                     if (hideBalance) {
                         onHiddenBalanceClick()
@@ -260,7 +260,7 @@ fun CashFlowInfo(
             hiddenMode = hideBalance
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         IncomeExpenses(
             percentExpanded = percentExpanded,
@@ -273,7 +273,7 @@ fun CashFlowInfo(
 
         val cashflow = monthlyIncome - monthlyExpenses
         if (cashflow != 0.0 && !hideBalance) {
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(8.dp))
 
             Text(
                 modifier = Modifier.padding(
@@ -292,7 +292,7 @@ fun CashFlowInfo(
 
             Spacer(Modifier.height(4.dp))
         } else {
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(12.dp))
         }
     }
 }
@@ -310,7 +310,7 @@ private fun IncomeExpenses(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Spacer(Modifier.width(16.dp))
+        Spacer(Modifier.width(12.dp))
 
         val nav = navigation()
 
@@ -335,7 +335,7 @@ private fun IncomeExpenses(
             }
         }
 
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(8.dp))
 
         HeaderCard(
             percentVisible = percentExpanded,
@@ -354,7 +354,7 @@ private fun IncomeExpenses(
             )
         }
 
-        Spacer(Modifier.width(16.dp))
+        Spacer(Modifier.width(12.dp))
     }
 }
 
@@ -415,12 +415,12 @@ private fun RowScope.HeaderCard(
                 onClick = onClick,
             ),
     ) {
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(10.dp))
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Spacer(Modifier.width(16.dp))
+            Spacer(Modifier.width(12.dp))
 
             IvyIcon(
                 icon = icon,
@@ -446,7 +446,7 @@ private fun RowScope.HeaderCard(
                 .align(Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Spacer(Modifier.width(20.dp))
+            Spacer(Modifier.width(16.dp))
 
             AmountCurrencyB1(
                 amount = amount,
@@ -458,6 +458,6 @@ private fun RowScope.HeaderCard(
             Spacer(Modifier.width(4.dp))
         }
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(14.dp))
     }
 }
