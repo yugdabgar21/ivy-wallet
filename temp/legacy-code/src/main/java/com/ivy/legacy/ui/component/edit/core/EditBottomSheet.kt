@@ -139,6 +139,20 @@ fun BoxWithConstraintsScope.EditBottomSheet(
         sheetGlassEnabled -> UI.colors.pure.copy(alpha = 0.86f)
         else -> pureBlur()
     }
+    val panelOverlay = if (sheetGlassEnabled) {
+        glassOverlayBrush(glassIntensity)
+    } else {
+        null
+    }
+    val panelBorder = if (sheetGlassEnabled) {
+        glassBorderBrush(
+            intensity = glassIntensity,
+            base = UI.colors.medium.copy(alpha = 0.4f),
+            highlight = UI.colors.pureInverse.copy(alpha = 0.45f)
+        )
+    } else {
+        null
+    }
 
     onScreenStart {
         rootView.addKeyboardListener {
@@ -210,16 +224,12 @@ fun BoxWithConstraintsScope.EditBottomSheet(
             }
             .background(panelBaseColor, UI.shapes.r2Top)
             .thenIf(sheetGlassEnabled) {
-                background(glassOverlayBrush(glassIntensity), UI.shapes.r2Top)
+                background(panelOverlay!!, UI.shapes.r2Top)
             }
             .thenIf(sheetGlassEnabled) {
                 border(
                     width = 1.dp,
-                    brush = glassBorderBrush(
-                        intensity = glassIntensity,
-                        base = UI.colors.medium.copy(alpha = 0.4f),
-                        highlight = UI.colors.pureInverse.copy(alpha = 0.45f)
-                    ),
+                    brush = panelBorder!!,
                     shape = UI.shapes.r2Top
                 )
             }

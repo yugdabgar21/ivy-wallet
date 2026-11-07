@@ -75,8 +75,8 @@ fun BoxWithConstraintsScope.AmountModal(
     decimalCountMax: Int = 2,
     Header: (@Composable () -> Unit)? = null,
     amountSpacerTop: Dp = 64.dp,
-    onAmountChanged: (Double) -> Unit,
     backdrop: LiquidGlassBackdrop? = null,
+    onAmountChanged: (Double) -> Unit,
 ) {
     var amount by remember(id) {
         mutableStateOf(
