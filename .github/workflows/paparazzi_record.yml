@@ -1,0 +1,36 @@
+name: Record Paparazzi goldens (manual)
+
+# Manual golden recording. Run this when a UI change intentionally alters screenshots.
+# Download the "paparazzi-goldens" artifact, review the images, and commit them.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  record:
+    name: Record screenshots
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GIT
+        uses: actions/checkout@v4
+
+      - name: Setup Java SDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Record Paparazzi screenshots
+        run: ./gradlew recordPaparazziDebug
+
+      - name: Upload recorded goldens
+        uses: actions/upload-artifact@v4
+        with:
+          name: paparazzi-goldens
+          path: '**/src/test/snapshots/**/*.png'
+          if-no-files-found: error
