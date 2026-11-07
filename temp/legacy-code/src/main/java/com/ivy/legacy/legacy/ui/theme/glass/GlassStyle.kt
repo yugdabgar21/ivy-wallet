@@ -57,3 +57,20 @@ fun glassBorderColor(
     val resolvedHighlight = highlight ?: UI.colors.pureInverse.copy(alpha = 0.30f)
     return lerp(base, resolvedHighlight, VisualEffectsIntensity.fraction(intensity))
 }
+
+/**
+ * A thin "highlight" border: brighter at the top, fading towards the bottom. This is the border
+ * used by the floating navigation pill, and it scales with [intensity].
+ */
+@Composable
+fun glassBorderBrush(
+    intensity: Int,
+    base: Color = Color.Transparent,
+    highlight: Color? = null,
+): Brush {
+    val fraction = VisualEffectsIntensity.fraction(intensity)
+    val resolvedHighlight = highlight ?: UI.colors.pureInverse.copy(alpha = 0.45f)
+    val top = lerp(base, resolvedHighlight, fraction)
+    val bottom = lerp(base, resolvedHighlight.copy(alpha = resolvedHighlight.alpha * 0.20f), fraction)
+    return Brush.verticalGradient(colors = listOf(top, bottom))
+}

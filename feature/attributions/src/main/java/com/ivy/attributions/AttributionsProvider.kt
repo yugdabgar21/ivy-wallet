@@ -103,6 +103,12 @@ class AttributionsProvider @Inject constructor() {
         AttributionItem.Attribution(
             name = "Slack's compose-lints",
             link = "https://slackhq.github.io/compose-lints"
+        ),
+
+        AttributionItem.Divider(sectionName = "Design"),
+        AttributionItem.Attribution(
+            name = "AndroidLiquidGlass (Kyant0, Apache-2.0)",
+            link = "https://github.com/Kyant0/AndroidLiquidGlass"
         )
     )
 
