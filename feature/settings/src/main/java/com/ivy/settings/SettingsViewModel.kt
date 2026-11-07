@@ -237,7 +237,7 @@ class SettingsViewModel @Inject constructor(
             SettingsEvent.DeleteAllUserData -> deleteAllUserData()
             SettingsEvent.SwitchLanguage -> switchLanguage()
             is SettingsEvent.SetVisualEffectsEnabled -> {
-                visualEffectsStore.setEnabled(event.enabled)
+                visualEffectsStore.setMasterEnabled(event.enabled)
             }
 
             is SettingsEvent.SetVisualEffectComponent -> {
@@ -245,11 +245,11 @@ class SettingsViewModel @Inject constructor(
             }
 
             is SettingsEvent.SetVisualEffectsIntensity -> {
-                visualEffectsStore.setIntensity(event.intensity)
+                visualEffectsStore.setIntensityLevel(event.intensity)
             }
 
             is SettingsEvent.SetScrollAnimationsEnabled -> {
-                visualEffectsStore.setScrollAnimationsEnabled(event.enabled)
+                visualEffectsStore.setScrollAnimations(event.enabled)
             }
         }
     }

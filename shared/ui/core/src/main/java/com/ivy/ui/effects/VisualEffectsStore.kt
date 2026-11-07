@@ -178,7 +178,7 @@ class VisualEffectsStore @Inject constructor(
         intensity = intensity,
     )
 
-    fun setEnabled(value: Boolean) {
+    fun setMasterEnabled(value: Boolean) {
         enabled = value
         sharedPrefs.putBoolean(SharedPrefs.VISUAL_EFFECTS_ENABLED, value)
     }
@@ -222,12 +222,12 @@ class VisualEffectsStore @Inject constructor(
         }
     }
 
-    fun setScrollAnimationsEnabled(value: Boolean) {
+    fun setScrollAnimations(value: Boolean) {
         scrollAnimationsEnabled = value
         sharedPrefs.putBoolean(SharedPrefs.VISUAL_EFFECTS_SCROLL_ANIMATIONS, value)
     }
 
-    fun setIntensity(value: Int) {
+    fun setIntensityLevel(value: Int) {
         val clamped = VisualEffectsIntensity.clamp(value)
         intensity = clamped
         sharedPrefs.putInt(SharedPrefs.VISUAL_EFFECTS_INTENSITY, clamped)
