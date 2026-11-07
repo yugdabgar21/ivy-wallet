@@ -31,6 +31,7 @@ import com.ivy.legacy.utils.ioThread
 import com.ivy.legacy.utils.timeNowUTC
 import com.ivy.legacy.utils.uiThread
 import com.ivy.ui.ComposeViewModel
+import com.ivy.ui.effects.VisualEffectsStore
 import com.ivy.wallet.domain.action.global.StartDayOfMonthAct
 import com.ivy.wallet.domain.action.global.UpdateStartDayOfMonthAct
 import com.ivy.wallet.domain.action.settings.SettingsAct
@@ -49,6 +50,7 @@ class SettingsViewModel @Inject constructor(
     private val ivyContext: IvyWalletCtx,
     private val logoutLogic: LogoutLogic,
     private val sharedPrefs: SharedPrefs,
+    private val visualEffectsStore: VisualEffectsStore,
     private val backupDataUseCase: BackupDataUseCase,
     private val startDayOfMonthAct: StartDayOfMonthAct,
     private val updateStartDayOfMonthAct: UpdateStartDayOfMonthAct,
@@ -88,7 +90,8 @@ class SettingsViewModel @Inject constructor(
             startDateOfMonth = getStartDateOfMonth(),
             progressState = getProgressState(),
             hideIncome = getHideIncome(),
-            languageOptionVisible = isLanguageOptionVisible()
+            languageOptionVisible = isLanguageOptionVisible(),
+            visualEffects = visualEffectsStore.snapshot()
         )
     }
 
@@ -233,6 +236,21 @@ class SettingsViewModel @Inject constructor(
             SettingsEvent.DeleteCloudUserData -> deleteCloudUserData()
             SettingsEvent.DeleteAllUserData -> deleteAllUserData()
             SettingsEvent.SwitchLanguage -> switchLanguage()
+            is SettingsEvent.SetVisualEffectsEnabled -> {
+                visualEffectsStore.setEnabled(event.enabled)
+            }
+
+            is SettingsEvent.SetVisualEffectComponent -> {
+                visualEffectsStore.setComponentEnabled(event.component, event.enabled)
+            }
+
+            is SettingsEvent.SetVisualEffectsIntensity -> {
+                visualEffectsStore.setIntensity(event.intensity)
+            }
+
+            is SettingsEvent.SetScrollAnimationsEnabled -> {
+                visualEffectsStore.setScrollAnimationsEnabled(event.enabled)
+            }
         }
     }
 

@@ -22,7 +22,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -39,6 +42,7 @@ import com.ivy.data.model.primitive.IconAsset
 import com.ivy.data.model.primitive.NotBlankTrimmedString
 import com.ivy.design.l0_system.UI
 import com.ivy.design.l0_system.style
+import com.ivy.design.utils.thenIf
 import com.ivy.legacy.IvyWalletPreview
 import com.ivy.legacy.data.model.AccountData
 import com.ivy.legacy.utils.clickableNoIndication
@@ -49,6 +53,9 @@ import com.ivy.navigation.TransactionsScreen
 import com.ivy.navigation.navigation
 import com.ivy.navigation.screenScopedViewModel
 import com.ivy.ui.R
+import com.ivy.ui.effects.LocalVisualEffectsStore
+import com.ivy.ui.effects.VisualEffectComponent
+import com.ivy.ui.effects.VisualEffectsIntensity
 import com.ivy.ui.rememberScrollPositionListState
 import com.ivy.wallet.ui.theme.Green
 import com.ivy.wallet.ui.theme.GreenLight
@@ -59,6 +66,7 @@ import com.ivy.wallet.ui.theme.components.ReorderButton
 import com.ivy.wallet.ui.theme.components.ReorderModalSingleType
 import com.ivy.wallet.ui.theme.dynamicContrast
 import com.ivy.wallet.ui.theme.findContrastTextColor
+import com.ivy.wallet.ui.theme.glass.glassBorderColor
 import com.ivy.wallet.ui.theme.toComposeColor
 import kotlinx.collections.immutable.persistentListOf
 import java.util.UUID
@@ -210,12 +218,26 @@ private fun AccountCard(
     onBalanceClick: () -> Unit,
     onClick: () -> Unit
 ) {
+    val visualEffects = LocalVisualEffectsStore.current
+    val glassEnabled =
+        visualEffects?.componentEnabled(VisualEffectComponent.DASHBOARD_CARDS) == true
+    val intensity = visualEffects?.intensity ?: VisualEffectsIntensity.DEFAULT
+    val cardBorder = if (glassEnabled) {
+        glassBorderColor(
+            intensity = intensity,
+            base = UI.colors.medium,
+            highlight = Color.White.copy(alpha = 0.42f)
+        )
+    } else {
+        UI.colors.medium
+    }
+
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .fillMaxWidth()
             .clip(UI.shapes.r4)
-            .border(2.dp, UI.colors.medium, UI.shapes.r4)
+            .border(2.dp, cardBorder, UI.shapes.r4)
             .clickable(
                 onClick = onClick
             )
@@ -258,10 +280,33 @@ private fun AccountHeader(
 ) {
     val account = accountData.account
 
+    val visualEffects = LocalVisualEffectsStore.current
+    val glassEnabled =
+        visualEffects?.componentEnabled(VisualEffectComponent.DASHBOARD_CARDS) == true
+    val intensity = visualEffects?.intensity ?: VisualEffectsIntensity.DEFAULT
+    val baseColor = account.color.value.toComposeColor()
+    val headerBrush: Brush = if (glassEnabled) {
+        val fraction = VisualEffectsIntensity.fraction(intensity)
+        Brush.verticalGradient(
+            colors = listOf(
+                lerp(baseColor, Color.White, 0.22f * fraction),
+                baseColor,
+                lerp(baseColor, Color.Black, 0.10f * fraction),
+            )
+        )
+    } else {
+        SolidColor(baseColor)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(account.color.value.toComposeColor(), UI.shapes.r4Top)
+            .thenIf(glassEnabled) {
+                background(headerBrush, UI.shapes.r4Top)
+            }
+            .thenIf(!glassEnabled) {
+                background(baseColor, UI.shapes.r4Top)
+            }
     ) {
         Spacer(Modifier.height(16.dp))
 

@@ -61,6 +61,9 @@ import com.ivy.legacy.utils.springBounceFast
 import com.ivy.legacy.utils.toDensityDp
 import com.ivy.legacy.utils.toDensityPx
 import com.ivy.ui.R
+import com.ivy.ui.effects.LocalVisualEffectsStore
+import com.ivy.ui.effects.VisualEffectComponent
+import com.ivy.ui.effects.VisualEffectsIntensity
 import com.ivy.wallet.ui.theme.Gradient
 import com.ivy.wallet.ui.theme.GradientGreen
 import com.ivy.wallet.ui.theme.GradientIvy
@@ -71,6 +74,8 @@ import com.ivy.wallet.ui.theme.components.IvyCircleButton
 import com.ivy.wallet.ui.theme.components.IvyIcon
 import com.ivy.wallet.ui.theme.components.IvyOutlinedButton
 import com.ivy.wallet.ui.theme.gradientExpenses
+import com.ivy.wallet.ui.theme.glass.glassBorderColor
+import com.ivy.wallet.ui.theme.glass.glassOverlayBrush
 import com.ivy.wallet.ui.theme.modal.AddModalBackHandling
 import com.ivy.wallet.ui.theme.pureBlur
 import java.util.UUID
@@ -94,6 +99,45 @@ fun BoxWithConstraintsScope.BottomBar(
     showAddAccountModal: () -> Unit,
 ) {
     val ivyContext = ivyWalletCtx()
+
+    val visualEffects = LocalVisualEffectsStore.current
+    val pillGlassEnabled =
+        visualEffects?.componentEnabled(VisualEffectComponent.BOTTOM_NAV) == true
+    val glassIntensity = visualEffects?.intensity ?: VisualEffectsIntensity.DEFAULT
+    val pillOverlay = if (pillGlassEnabled) {
+        glassOverlayBrush(glassIntensity)
+    } else {
+        Gradient.solid(Color.Transparent).asHorizontalBrush()
+    }
+    val pillBorder = if (pillGlassEnabled) {
+        glassBorderColor(
+            intensity = glassIntensity,
+            base = UI.colors.medium.copy(alpha = 0.4f),
+            highlight = UI.colors.pureInverse.copy(alpha = 0.35f)
+        )
+    } else {
+        UI.colors.medium.copy(alpha = 0.4f)
+    }
+    val pillElevation = if (pillGlassEnabled) {
+        (8 + VisualEffectsIntensity.shadowElevationDp(glassIntensity)).dp
+    } else {
+        8.dp
+    }
+    val pillBaseColor = if (pillGlassEnabled) {
+        UI.colors.pure.copy(alpha = 0.86f)
+    } else {
+        pureBlur()
+    }
+    val fabBorderColor = if (
+        visualEffects?.componentEnabled(VisualEffectComponent.FAB) == true
+    ) {
+        glassBorderColor(
+            intensity = glassIntensity,
+            highlight = White.copy(alpha = 0.45f)
+        )
+    } else {
+        null
+    }
 
     var expanded by remember { mutableStateOf(false) }
 
@@ -136,15 +180,18 @@ fun BoxWithConstraintsScope.BottomBar(
             .padding(bottom = 8.dp)
             .padding(horizontal = 16.dp)
             .shadow(
-                elevation = 8.dp,
+                elevation = pillElevation,
                 shape = UI.shapes.rFull,
                 clip = false
             )
             .clip(UI.shapes.rFull)
-            .background(pureBlur(), UI.shapes.rFull)
+            .background(pillBaseColor, UI.shapes.rFull)
+            .thenIf(pillGlassEnabled) {
+                background(pillOverlay, UI.shapes.rFull)
+            }
             .border(
                 width = 1.dp,
-                color = UI.colors.medium.copy(alpha = 0.4f),
+                color = pillBorder,
                 shape = UI.shapes.rFull
             )
             .alpha(1f - buttonsShownPercent)
@@ -267,6 +314,7 @@ fun BoxWithConstraintsScope.BottomBar(
             .testTag("fab_add"),
         backgroundPadding = 8.dp,
         icon = R.drawable.ic_add,
+        glassBorder = fabBorderColor,
         backgroundGradient = when (tab) {
             MainTab.HOME -> {
                 if (!expanded) GradientIvy else Gradient.solid(UI.colors.gray)

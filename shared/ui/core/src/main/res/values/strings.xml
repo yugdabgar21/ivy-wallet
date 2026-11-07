@@ -495,4 +495,21 @@
     <string name="bill_paid">Your bill for %1$s %2$s has been paid</string>
     <string name="language">Language</string>
     <string name="advanced_features">Advanced features</string>
+    <string name="visual_effects">Visual Effects</string>
+    <string name="visual_effects_master">Material Liquid Glass</string>
+    <string name="visual_effects_master_description">Translucent surfaces, soft highlights and gentle depth. Turn off to use the classic flat design.</string>
+    <string name="visual_effects_bottom_nav">Bottom navigation</string>
+    <string name="visual_effects_dashboard_cards">Dashboard cards</string>
+    <string name="visual_effects_dashboard_cards_description">Income, expense and account cards</string>
+    <string name="visual_effects_transaction_cards">Transaction cards</string>
+    <string name="visual_effects_fab">Add transaction button</string>
+    <string name="visual_effects_bottom_sheets">Bottom sheets</string>
+    <string name="visual_effects_bottom_sheets_description">The panel that slides up from the bottom</string>
+    <string name="visual_effects_dialogs">Dialog backdrop</string>
+    <string name="visual_effects_dialogs_description">The dimmed layer behind pop-up dialogs</string>
+    <string name="visual_effects_settings_panels">Settings panels</string>
+    <string name="visual_effects_intensity">Glass effect intensity</string>
+    <string name="visual_effects_intensity_description">0% keeps the classic look, 100% is the richest glass styling.</string>
+    <string name="visual_effects_scroll_animations">Scroll animation</string>
+    <string name="visual_effects_scroll_animations_description">Gently moves the home header while you scroll. Turn off to save battery.</string>
 </resources>

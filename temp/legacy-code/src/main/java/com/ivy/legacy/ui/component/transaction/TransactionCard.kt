@@ -2,6 +2,7 @@ package com.ivy.legacy.ui.component.transaction
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -50,6 +52,7 @@ import com.ivy.design.l0_system.UI
 import com.ivy.design.l0_system.style
 import com.ivy.design.l1_buildingBlocks.IvyText
 import com.ivy.design.l1_buildingBlocks.SpacerHor
+import com.ivy.design.utils.thenIf
 import com.ivy.legacy.IvyWalletPreview
 import com.ivy.legacy.data.AppBaseData
 import com.ivy.legacy.datamodel.Account
@@ -62,6 +65,9 @@ import com.ivy.navigation.Navigation
 import com.ivy.navigation.TransactionsScreen
 import com.ivy.navigation.navigation
 import com.ivy.ui.R
+import com.ivy.ui.effects.LocalVisualEffectsStore
+import com.ivy.ui.effects.VisualEffectComponent
+import com.ivy.ui.effects.VisualEffectsIntensity
 import com.ivy.ui.time.TimeFormatter
 import com.ivy.wallet.domain.data.IvyCurrency
 import com.ivy.wallet.ui.theme.Blue
@@ -83,6 +89,7 @@ import com.ivy.wallet.ui.theme.components.IvyButton
 import com.ivy.wallet.ui.theme.components.IvyIcon
 import com.ivy.wallet.ui.theme.findContrastTextColor
 import com.ivy.wallet.ui.theme.gradientExpenses
+import com.ivy.wallet.ui.theme.glass.glassBorderColor
 import com.ivy.wallet.ui.theme.toComposeColor
 import com.ivy.wallet.ui.theme.wallet.AmountCurrencyB1
 import kotlinx.collections.immutable.ImmutableList
@@ -103,6 +110,32 @@ fun TransactionCard(
     onSkipTransaction: (Transaction) -> Unit = {},
     onClick: (Transaction) -> Unit,
 ) {
+    val visualEffects = LocalVisualEffectsStore.current
+    val glassEnabled =
+        visualEffects?.componentEnabled(VisualEffectComponent.TRANSACTION_CARDS) == true
+    val intensity = visualEffects?.intensity ?: VisualEffectsIntensity.DEFAULT
+    val sheen = VisualEffectsIntensity.fraction(intensity)
+    val glassOverlay: Brush = if (glassEnabled) {
+        Brush.verticalGradient(
+            colors = listOf(
+                UI.colors.pureInverse.copy(alpha = 0.06f * sheen),
+                Color.Transparent,
+                UI.colors.pureInverse.copy(alpha = 0.04f * sheen),
+            )
+        )
+    } else {
+        SolidColor(Color.Transparent)
+    }
+    val glassBorder: Color = if (glassEnabled) {
+        glassBorderColor(
+            intensity = intensity,
+            base = UI.colors.medium.copy(alpha = 0.6f),
+            highlight = UI.colors.pureInverse.copy(alpha = 0.22f)
+        )
+    } else {
+        Color.Transparent
+    }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -115,6 +148,12 @@ fun TransactionCard(
                 }
             }
             .background(UI.colors.medium, UI.shapes.r4)
+            .thenIf(glassEnabled) {
+                background(glassOverlay, UI.shapes.r4)
+            }
+            .thenIf(glassEnabled) {
+                border(1.dp, glassBorder, UI.shapes.r4)
+            }
             .testTag("transaction_card")
     ) {
         // TODO: Optimize this

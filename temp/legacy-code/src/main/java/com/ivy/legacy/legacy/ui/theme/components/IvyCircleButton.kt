@@ -2,6 +2,7 @@ package com.ivy.wallet.ui.theme.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -33,8 +34,11 @@ fun IvyCircleButton(
     tint: Color = White,
     enabled: Boolean = true,
     hasShadow: Boolean = true,
+    glassBorder: Color? = null,
     onClick: () -> Unit
 ) {
+    val resolvedGlassBorder = glassBorder ?: Color.Transparent
+
     IvyIcon(
         modifier = modifier
             .thenIf(enabled && hasShadow) {
@@ -59,6 +63,9 @@ fun IvyCircleButton(
                 },
                 shape = UI.shapes.rFull
             )
+            .thenIf(glassBorder != null) {
+                border(1.dp, resolvedGlassBorder, UI.shapes.rFull)
+            }
             .clickable(onClick = onClick, enabled = enabled)
             .padding(all = backgroundPadding),
         icon = icon,

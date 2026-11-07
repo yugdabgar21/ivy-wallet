@@ -21,6 +21,7 @@ import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -49,6 +50,8 @@ import com.ivy.legacy.utils.simpleActivityForResultLauncher
 import com.ivy.navigation.Navigation
 import com.ivy.navigation.NavigationRoot
 import com.ivy.ui.R
+import com.ivy.ui.effects.LocalVisualEffectsStore
+import com.ivy.ui.effects.VisualEffectsStore
 import com.ivy.ui.time.TimeFormatter
 import com.ivy.ui.time.impl.DateTimePicker
 import com.ivy.wallet.ui.applocked.AppLockedScreen
@@ -84,6 +87,9 @@ class RootActivity : AppCompatActivity(), RootScreen {
     @Inject
     lateinit var dateTimePicker: DateTimePicker
 
+    @Inject
+    lateinit var visualEffects: VisualEffectsStore
+
     private lateinit var createFileLauncher: ActivityResultLauncher<String>
     private lateinit var onFileCreated: (fileUri: Uri) -> Unit
 
@@ -94,10 +100,15 @@ class RootActivity : AppCompatActivity(), RootScreen {
 
     @OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+        StartupTrace.mark("RootActivity.onCreate start")
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setupApp()
+        StartupTrace.mark("RootActivity.setupApp done")
         setContent {
+            LaunchedEffect(Unit) {
+                StartupTrace.mark("RootActivity.first composition done")
+            }
             val viewModel: RootViewModel = viewModel()
             val isSystemInDarkTheme = isSystemInDarkTheme()
 
@@ -106,39 +117,41 @@ class RootActivity : AppCompatActivity(), RootScreen {
             }
 
             val appLocked by viewModel.appLocked.collectAsState()
-            when (appLocked) {
-                null -> { // display nothing
-                }
-                true -> {
-                    IvyUI(
-                        design = appDesign(ivyContext),
-                        timeConverter = timeConverter,
-                        timeProvider = timeProvider,
-                        timeFormatter = timeFormatter,
-                    ) {
-                        AppLockedScreen(
-                            onShowOSBiometricsModal = {
-                                authenticateWithOSBiometricsModal(
-                                    biometricPromptCallback = viewModel.handleBiometricAuthResult()
-                                )
-                            },
-                            onContinueWithoutAuthentication = {
-                                viewModel.unlockApp()
-                            }
-                        )
+            CompositionLocalProvider(LocalVisualEffectsStore provides visualEffects) {
+                when (appLocked) {
+                    null -> { // display nothing
                     }
-                }
-
-                false -> {
-                    NavigationRoot(navigation = navigation) { screen ->
+                    true -> {
                         IvyUI(
                             design = appDesign(ivyContext),
-                            includeSurface = screen?.isLegacy ?: true,
                             timeConverter = timeConverter,
                             timeProvider = timeProvider,
                             timeFormatter = timeFormatter,
                         ) {
-                            IvyNavGraph(screen)
+                            AppLockedScreen(
+                                onShowOSBiometricsModal = {
+                                    authenticateWithOSBiometricsModal(
+                                        biometricPromptCallback = viewModel.handleBiometricAuthResult()
+                                    )
+                                },
+                                onContinueWithoutAuthentication = {
+                                    viewModel.unlockApp()
+                                }
+                            )
+                        }
+                    }
+
+                    false -> {
+                        NavigationRoot(navigation = navigation) { screen ->
+                            IvyUI(
+                                design = appDesign(ivyContext),
+                                includeSurface = screen?.isLegacy ?: true,
+                                timeConverter = timeConverter,
+                                timeProvider = timeProvider,
+                                timeFormatter = timeFormatter,
+                            ) {
+                                IvyNavGraph(screen)
+                            }
                         }
                     }
                 }

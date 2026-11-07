@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -57,6 +58,10 @@ import com.ivy.navigation.ReleasesScreen
 import com.ivy.navigation.navigation
 import com.ivy.navigation.screenScopedViewModel
 import com.ivy.ui.R
+import com.ivy.ui.effects.LocalVisualEffectsStore
+import com.ivy.ui.effects.VisualEffectComponent
+import com.ivy.ui.effects.VisualEffectsIntensity
+import com.ivy.ui.effects.VisualEffectsState
 import com.ivy.wallet.domain.data.IvyCurrency
 import com.ivy.wallet.ui.theme.Blue
 import com.ivy.wallet.ui.theme.Gradient
@@ -69,12 +74,15 @@ import com.ivy.wallet.ui.theme.Red3
 import com.ivy.wallet.ui.theme.White
 import com.ivy.wallet.ui.theme.components.IvySwitch
 import com.ivy.wallet.ui.theme.components.IvyToolbar
+import com.ivy.wallet.ui.theme.glass.glassBorderColor
+import com.ivy.wallet.ui.theme.glass.glassOverlayBrush
 import com.ivy.wallet.ui.theme.modal.ChooseStartDateOfMonthModal
 import com.ivy.wallet.ui.theme.modal.CurrencyModal
 import com.ivy.wallet.ui.theme.modal.DeleteModal
 import com.ivy.wallet.ui.theme.modal.NameModal
 import com.ivy.wallet.ui.theme.modal.ProgressModal
 import java.util.Locale
+import kotlin.math.roundToInt
 
 @ExperimentalFoundationApi
 @Composable
@@ -128,6 +136,19 @@ fun BoxWithConstraintsScope.SettingsScreen() {
         onSetTreatTransfersAsIncExp = {
             viewModel.onEvent(SettingsEvent.SetTransfersAsIncomeExpense(it))
         },
+        visualEffects = uiState.visualEffects,
+        onSetVisualEffectsEnabled = {
+            viewModel.onEvent(SettingsEvent.SetVisualEffectsEnabled(it))
+        },
+        onSetVisualEffect = { component, enabled ->
+            viewModel.onEvent(SettingsEvent.SetVisualEffectComponent(component, enabled))
+        },
+        onSetVisualEffectsIntensity = {
+            viewModel.onEvent(SettingsEvent.SetVisualEffectsIntensity(it))
+        },
+        onSetScrollAnimationsEnabled = {
+            viewModel.onEvent(SettingsEvent.SetScrollAnimationsEnabled(it))
+        },
         onDeleteAllUserData = {
             viewModel.onEvent(SettingsEvent.DeleteAllUserData)
         },
@@ -166,6 +187,11 @@ private fun BoxWithConstraintsScope.UI(
     onSetHideCurrentBalance: (Boolean) -> Unit = {},
     onSetHideIncome: (Boolean) -> Unit = {},
     onSetStartDateOfMonth: (Int) -> Unit = {},
+    visualEffects: VisualEffectsState = VisualEffectsState.Default,
+    onSetVisualEffectsEnabled: (Boolean) -> Unit = {},
+    onSetVisualEffect: (VisualEffectComponent, Boolean) -> Unit = { _, _ -> },
+    onSetVisualEffectsIntensity: (Int) -> Unit = {},
+    onSetScrollAnimationsEnabled: (Boolean) -> Unit = {},
     onDeleteAllUserData: () -> Unit = {},
     onDeleteCloudUserData: () -> Unit = {},
     onSwitchLanguage: () -> Unit = {}
@@ -387,6 +413,130 @@ private fun BoxWithConstraintsScope.UI(
             CustomFeatures(
                 onClick = { nav.navigateTo(FeaturesScreen) }
             )
+        }
+
+        item {
+            SettingsSectionDivider(text = stringResource(R.string.visual_effects))
+
+            Spacer(Modifier.height(16.dp))
+
+            AppSwitch(
+                lockApp = visualEffects.enabled,
+                onSetLockApp = onSetVisualEffectsEnabled,
+                text = stringResource(R.string.visual_effects_master),
+                description = stringResource(R.string.visual_effects_master_description),
+                icon = R.drawable.ic_custom_star_m,
+                testTag = "visual_effects_master"
+            )
+
+            if (visualEffects.enabled) {
+                Spacer(Modifier.height(12.dp))
+
+                AppSwitch(
+                    lockApp = visualEffects.bottomNav,
+                    onSetLockApp = {
+                        onSetVisualEffect(VisualEffectComponent.BOTTOM_NAV, it)
+                    },
+                    text = stringResource(R.string.visual_effects_bottom_nav),
+                    icon = R.drawable.ic_home,
+                    testTag = "visual_effects_bottom_nav"
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                AppSwitch(
+                    lockApp = visualEffects.dashboardCards,
+                    onSetLockApp = {
+                        onSetVisualEffect(VisualEffectComponent.DASHBOARD_CARDS, it)
+                    },
+                    text = stringResource(R.string.visual_effects_dashboard_cards),
+                    description = stringResource(R.string.visual_effects_dashboard_cards_description),
+                    icon = R.drawable.ic_income,
+                    testTag = "visual_effects_dashboard_cards"
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                AppSwitch(
+                    lockApp = visualEffects.transactionCards,
+                    onSetLockApp = {
+                        onSetVisualEffect(VisualEffectComponent.TRANSACTION_CARDS, it)
+                    },
+                    text = stringResource(R.string.visual_effects_transaction_cards),
+                    icon = R.drawable.ic_custom_transfer_m,
+                    testTag = "visual_effects_transaction_cards"
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                AppSwitch(
+                    lockApp = visualEffects.fab,
+                    onSetLockApp = {
+                        onSetVisualEffect(VisualEffectComponent.FAB, it)
+                    },
+                    text = stringResource(R.string.visual_effects_fab),
+                    icon = R.drawable.ic_add,
+                    testTag = "visual_effects_fab"
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                AppSwitch(
+                    lockApp = visualEffects.bottomSheets,
+                    onSetLockApp = {
+                        onSetVisualEffect(VisualEffectComponent.BOTTOM_SHEETS, it)
+                    },
+                    text = stringResource(R.string.visual_effects_bottom_sheets),
+                    description = stringResource(R.string.visual_effects_bottom_sheets_description),
+                    icon = R.drawable.ic_custom_calendar_m,
+                    testTag = "visual_effects_bottom_sheets"
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                AppSwitch(
+                    lockApp = visualEffects.dialogs,
+                    onSetLockApp = {
+                        onSetVisualEffect(VisualEffectComponent.DIALOGS, it)
+                    },
+                    text = stringResource(R.string.visual_effects_dialogs),
+                    description = stringResource(R.string.visual_effects_dialogs_description),
+                    icon = R.drawable.ic_notification_m,
+                    testTag = "visual_effects_dialogs"
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                AppSwitch(
+                    lockApp = visualEffects.settingsPanels,
+                    onSetLockApp = {
+                        onSetVisualEffect(VisualEffectComponent.SETTINGS_PANELS, it)
+                    },
+                    text = stringResource(R.string.visual_effects_settings_panels),
+                    icon = R.drawable.ic_custom_programming_m,
+                    testTag = "visual_effects_settings_panels"
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                VisualEffectsIntensityControl(
+                    intensity = visualEffects.intensity,
+                    onSetIntensity = onSetVisualEffectsIntensity
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                AppSwitch(
+                    lockApp = visualEffects.scrollAnimations,
+                    onSetLockApp = onSetScrollAnimationsEnabled,
+                    text = stringResource(R.string.visual_effects_scroll_animations),
+                    description = stringResource(
+                        R.string.visual_effects_scroll_animations_description
+                    ),
+                    icon = R.drawable.ic_custom_programming_m,
+                    testTag = "visual_effects_scroll_animations"
+                )
+            }
         }
 
 //        item {
@@ -766,11 +916,13 @@ private fun AppSwitch(
     text: String,
     icon: Int,
     description: String = "",
+    testTag: String = "",
 ) {
     SettingsButtonRow(
         onClick = {
             onSetLockApp(!lockApp)
-        }
+        },
+        tag = testTag
     ) {
         Spacer(Modifier.width(12.dp))
 
@@ -822,6 +974,17 @@ private fun AccountCard(
     nameLocalAccount: String?,
     onCardClick: () -> Unit
 ) {
+    val visualEffects = LocalVisualEffectsStore.current
+    val glassEnabled =
+        visualEffects?.componentEnabled(VisualEffectComponent.SETTINGS_PANELS) == true
+    val intensity = visualEffects?.intensity ?: VisualEffectsIntensity.DEFAULT
+    val glassOverlay = if (glassEnabled) {
+        glassOverlayBrush(intensity)
+    } else {
+        Gradient.solid(Color.Transparent).asHorizontalBrush()
+    }
+    val glassBorder = if (glassEnabled) glassBorderColor(intensity) else Color.Transparent
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -829,6 +992,12 @@ private fun AccountCard(
             .fillMaxWidth()
             .clip(UI.shapes.r2)
             .background(UI.colors.medium, UI.shapes.r2)
+            .thenIf(glassEnabled) {
+                background(glassOverlay, UI.shapes.r2)
+            }
+            .thenIf(glassEnabled) {
+                border(1.dp, glassBorder, UI.shapes.r2)
+            }
             .clickable {
                 onCardClick()
             }
@@ -1015,8 +1184,20 @@ private fun SettingsButtonRow(
     onClick: (() -> Unit)?,
     hasShadow: Boolean = false,
     backgroundGradient: Gradient = Gradient.solid(UI.colors.medium),
+    tag: String = "",
     content: @Composable RowScope.() -> Unit
 ) {
+    val visualEffects = LocalVisualEffectsStore.current
+    val glassEnabled =
+        visualEffects?.componentEnabled(VisualEffectComponent.SETTINGS_PANELS) == true
+    val intensity = visualEffects?.intensity ?: VisualEffectsIntensity.DEFAULT
+    val glassOverlay = if (glassEnabled) {
+        glassOverlayBrush(intensity)
+    } else {
+        Gradient.solid(Color.Transparent).asHorizontalBrush()
+    }
+    val glassBorder = if (glassEnabled) glassBorderColor(intensity) else Color.Transparent
+
     Row(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -1026,6 +1207,15 @@ private fun SettingsButtonRow(
             .fillMaxWidth()
             .clip(UI.shapes.r4)
             .background(backgroundGradient.asHorizontalBrush(), UI.shapes.r4)
+            .thenIf(glassEnabled) {
+                background(glassOverlay, UI.shapes.r4)
+            }
+            .thenIf(glassEnabled) {
+                border(1.dp, glassBorder, UI.shapes.r4)
+            }
+            .thenIf(tag.isNotEmpty()) {
+                testTag(tag)
+            }
             .thenIf(onClick != null) {
                 clickable {
                     onClick?.invoke()
@@ -1034,6 +1224,65 @@ private fun SettingsButtonRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         content()
+    }
+}
+
+@Composable
+private fun VisualEffectsIntensityControl(
+    intensity: Int,
+    onSetIntensity: (Int) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth()
+            .clip(UI.shapes.r4)
+            .background(UI.colors.medium, UI.shapes.r4)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .testTag("visual_effects_intensity")
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.visual_effects_intensity),
+                style = UI.typo.b2.style(
+                    color = UI.colors.pureInverse,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+
+            Spacer(Modifier.weight(1f))
+
+            Text(
+                text = "$intensity%",
+                style = UI.typo.nB2.style(
+                    color = UI.colors.pureInverse,
+                    fontWeight = FontWeight.ExtraBold
+                )
+            )
+        }
+
+        Text(
+            text = stringResource(R.string.visual_effects_intensity_description),
+            style = UI.typo.nB2.style(
+                color = Gray,
+                fontWeight = FontWeight.Normal
+            ).copy(fontSize = 14.sp)
+        )
+
+        Slider(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("visual_effects_intensity_slider"),
+            value = intensity.toFloat(),
+            onValueChange = {
+                onSetIntensity(it.roundToInt())
+            },
+            valueRange = VisualEffectsIntensity.MIN.toFloat()..VisualEffectsIntensity.MAX.toFloat(),
+            steps = 9
+        )
     }
 }
 

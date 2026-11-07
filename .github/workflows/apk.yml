@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - feature/floating-pill-bottom-nav
+      - feature/liquid-glass-ui
   pull_request:
     branches:
       - main

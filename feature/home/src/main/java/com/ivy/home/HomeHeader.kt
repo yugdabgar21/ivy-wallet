@@ -5,6 +5,7 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,7 +24,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -51,6 +54,9 @@ import com.ivy.legacy.utils.verticalSwipeListener
 import com.ivy.navigation.PieChartStatisticScreen
 import com.ivy.navigation.navigation
 import com.ivy.ui.R
+import com.ivy.ui.effects.LocalVisualEffectsStore
+import com.ivy.ui.effects.VisualEffectComponent
+import com.ivy.ui.effects.VisualEffectsIntensity
 import com.ivy.wallet.ui.theme.Gradient
 import com.ivy.wallet.ui.theme.GradientGreen
 import com.ivy.wallet.ui.theme.Gray
@@ -60,6 +66,7 @@ import com.ivy.wallet.ui.theme.components.BalanceRow
 import com.ivy.wallet.ui.theme.components.BalanceRowMini
 import com.ivy.wallet.ui.theme.components.IvyIcon
 import com.ivy.wallet.ui.theme.components.IvyOutlinedButton
+import com.ivy.wallet.ui.theme.glass.glassBorderColor
 import com.ivy.wallet.ui.theme.wallet.AmountCurrencyB1
 import kotlin.math.absoluteValue
 
@@ -363,6 +370,31 @@ private fun RowScope.HeaderCard(
     testTag: String,
     onClick: () -> Unit,
 ) {
+    val visualEffects = LocalVisualEffectsStore.current
+    val glassEnabled =
+        visualEffects?.componentEnabled(VisualEffectComponent.DASHBOARD_CARDS) == true
+    val intensity = visualEffects?.intensity ?: VisualEffectsIntensity.DEFAULT
+    val sheen = VisualEffectsIntensity.fraction(intensity)
+    val glassOverlay: Brush = if (glassEnabled) {
+        Brush.verticalGradient(
+            colors = listOf(
+                Color.White.copy(alpha = 0.18f * sheen),
+                Color.Transparent,
+                Color.Black.copy(alpha = 0.10f * sheen),
+            )
+        )
+    } else {
+        SolidColor(Color.Transparent)
+    }
+    val glassBorder: Color = if (glassEnabled) {
+        glassBorderColor(
+            intensity = intensity,
+            highlight = Color.White.copy(alpha = 0.40f)
+        )
+    } else {
+        Color.Transparent
+    }
+
     Column(
         modifier = Modifier
             .weight(1f)
@@ -371,6 +403,12 @@ private fun RowScope.HeaderCard(
             }
             .clip(UI.shapes.r4)
             .background(backgroundGradient.asHorizontalBrush())
+            .thenIf(glassEnabled) {
+                background(glassOverlay)
+            }
+            .thenIf(glassEnabled) {
+                border(1.dp, glassBorder, UI.shapes.r4)
+            }
             .testTag(testTag)
             .clickable(
                 onClick = onClick,

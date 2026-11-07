@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -31,6 +32,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -54,9 +58,15 @@ import com.ivy.legacy.utils.onScreenStart
 import com.ivy.design.utils.thenIf
 import com.ivy.navigation.Navigation
 import com.ivy.navigation.navigation
+import com.ivy.ui.effects.LocalVisualEffectsStore
+import com.ivy.ui.effects.VisualEffectComponent
+import com.ivy.ui.effects.VisualEffectsIntensity
 import com.ivy.wallet.ui.theme.components.ActionsRow
 import com.ivy.wallet.ui.theme.components.CloseButton
 import com.ivy.wallet.ui.theme.gradientCutBackgroundTop
+import com.ivy.wallet.ui.theme.glass.glassBorderColor
+import com.ivy.wallet.ui.theme.glass.glassOverlayBrush
+import com.ivy.wallet.ui.theme.glass.glassScrimBrush
 import com.ivy.wallet.ui.theme.mediumBlur
 import java.util.UUID
 import kotlin.math.roundToInt
@@ -82,6 +92,33 @@ fun BoxScope.IvyModal(
 ) {
     val rootView = LocalView.current
     var keyboardShown by remember { mutableStateOf(false) }
+
+    // Glass styling is read from the shared Visual Effects store. When the store is missing
+    // (previews, screenshot tests) or a switch is off we keep the original flat appearance.
+    val visualEffects = LocalVisualEffectsStore.current
+    val dialogGlassEnabled =
+        visualEffects?.componentEnabled(VisualEffectComponent.DIALOGS) == true
+    val sheetGlassEnabled =
+        visualEffects?.componentEnabled(VisualEffectComponent.BOTTOM_SHEETS) == true
+    val glassIntensity = visualEffects?.intensity ?: VisualEffectsIntensity.DEFAULT
+
+    val dialogScrim: Brush = if (dialogGlassEnabled) {
+        glassScrimBrush(glassIntensity)
+    } else {
+        SolidColor(mediumBlur())
+    }
+    val sheetOverlay: Brush = if (sheetGlassEnabled) {
+        glassOverlayBrush(glassIntensity)
+    } else {
+        SolidColor(Color.Transparent)
+    }
+    val sheetBorderColor: Color =
+        if (sheetGlassEnabled) glassBorderColor(glassIntensity) else Color.Transparent
+    val sheetBaseColor = if (sheetGlassEnabled) {
+        UI.colors.pure.copy(alpha = 0.93f)
+    } else {
+        UI.colors.pure
+    }
 
     onScreenStart {
         rootView.addKeyboardListener {
@@ -117,7 +154,7 @@ fun BoxScope.IvyModal(
             modifier = Modifier
                 .fillMaxSize()
                 .alpha(blurAlpha)
-                .background(mediumBlur())
+                .background(dialogScrim)
                 .testTag("modal_outside_blur")
                 .clickable(
                     onClick = {
@@ -152,7 +189,13 @@ fun BoxScope.IvyModal(
                 .fillMaxWidth()
                 .statusBarsPadding()
                 .padding(top = 24.dp)
-                .background(UI.colors.pure, UI.shapes.r2Top)
+                .background(sheetBaseColor, UI.shapes.r2Top)
+                .thenIf(sheetGlassEnabled) {
+                    background(sheetOverlay, UI.shapes.r2Top)
+                }
+                .thenIf(sheetGlassEnabled) {
+                    border(1.dp, sheetBorderColor, UI.shapes.r2Top)
+                }
                 .consumeClicks(rememberInteractionSource())
                 .thenIf(scrollState != null) {
                     verticalScroll(scrollState!!)

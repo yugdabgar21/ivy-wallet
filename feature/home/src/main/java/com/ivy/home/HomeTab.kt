@@ -2,6 +2,7 @@ package com.ivy.home
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -52,6 +54,9 @@ import com.ivy.legacy.utils.verticalSwipeListener
 import com.ivy.navigation.IvyPreview
 import com.ivy.navigation.screenScopedViewModel
 import com.ivy.ui.R
+import com.ivy.ui.effects.LocalVisualEffectsStore
+import com.ivy.ui.effects.VisualEffectsIntensity
+import com.ivy.ui.effects.rememberSystemAnimationsEnabled
 import com.ivy.ui.rememberScrollPositionListState
 import com.ivy.wallet.domain.data.IvyCurrency
 import com.ivy.wallet.domain.pure.data.IncomeExpensePair
@@ -100,6 +105,12 @@ fun BoxWithConstraintsScope.HomeUi(
 
     val baseCurrency = uiState.baseData.baseCurrency
 
+    val visualEffects = LocalVisualEffectsStore.current
+    val systemAnimationsEnabled = rememberSystemAnimationsEnabled()
+    val scrollEffectEnabled =
+        visualEffects?.scrollAnimationsEnabled == true && systemAnimationsEnabled
+    val effectsIntensity = visualEffects?.intensity ?: VisualEffectsIntensity.DEFAULT
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -130,32 +141,46 @@ fun BoxWithConstraintsScope.HomeUi(
                 ?.firstVisibleItemScrollOffset ?: 0
         )
 
-        HomeHeader(
-            expanded = uiState.expanded,
-            name = uiState.name,
-            period = uiState.period,
-            currency = baseCurrency,
-            balance = uiState.balance.toDouble(),
-            hideBalance = uiState.hideBalance,
-
-            onShowMonthModal = {
-                choosePeriodModal = ChoosePeriodModalData(
-                    period = uiState.period
-                )
-            },
-            onBalanceClick = {
-                onEvent(HomeEvent.BalanceClick)
-            },
-            onHiddenBalanceClick = {
-                onEvent(HomeEvent.HiddenBalanceClick)
-            },
-            onSelectNextMonth = {
-                onEvent(HomeEvent.SelectNextMonth)
-            },
-            onSelectPreviousMonth = {
-                onEvent(HomeEvent.SelectPreviousMonth)
+        Box(
+            modifier = if (scrollEffectEnabled) {
+                Modifier.graphicsLayer {
+                    val scrolled = listState.firstVisibleItemScrollOffset.toFloat()
+                    val multiplier =
+                        VisualEffectsIntensity.scrollTranslationMultiplier(effectsIntensity)
+                    val shift = scrolled * multiplier
+                    translationY = (-shift).coerceIn(-64.dp.toPx(), 0f)
+                }
+            } else {
+                Modifier
             }
-        )
+        ) {
+            HomeHeader(
+                expanded = uiState.expanded,
+                name = uiState.name,
+                period = uiState.period,
+                currency = baseCurrency,
+                balance = uiState.balance.toDouble(),
+                hideBalance = uiState.hideBalance,
+
+                onShowMonthModal = {
+                    choosePeriodModal = ChoosePeriodModalData(
+                        period = uiState.period
+                    )
+                },
+                onBalanceClick = {
+                    onEvent(HomeEvent.BalanceClick)
+                },
+                onHiddenBalanceClick = {
+                    onEvent(HomeEvent.HiddenBalanceClick)
+                },
+                onSelectNextMonth = {
+                    onEvent(HomeEvent.SelectNextMonth)
+                },
+                onSelectPreviousMonth = {
+                    onEvent(HomeEvent.SelectPreviousMonth)
+                }
+            )
+        }
 
         HomeLazyColumn(
             hideBalance = uiState.hideBalance,

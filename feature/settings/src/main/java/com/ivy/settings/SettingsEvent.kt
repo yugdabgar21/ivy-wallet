@@ -1,6 +1,7 @@
 package com.ivy.settings
 
 import com.ivy.domain.RootScreen
+import com.ivy.ui.effects.VisualEffectComponent
 
 sealed interface SettingsEvent {
     data class SetCurrency(val newCurrency: String) : SettingsEvent
@@ -19,4 +20,12 @@ sealed interface SettingsEvent {
     data object DeleteCloudUserData : SettingsEvent
     data object DeleteAllUserData : SettingsEvent
     data object SwitchLanguage : SettingsEvent
+    data class SetVisualEffectsEnabled(val enabled: Boolean) : SettingsEvent
+    data class SetVisualEffectComponent(
+        val component: VisualEffectComponent,
+        val enabled: Boolean
+    ) : SettingsEvent
+
+    data class SetVisualEffectsIntensity(val intensity: Int) : SettingsEvent
+    data class SetScrollAnimationsEnabled(val enabled: Boolean) : SettingsEvent
 }

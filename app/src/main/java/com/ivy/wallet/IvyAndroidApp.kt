@@ -28,6 +28,7 @@ class IvyAndroidApp : Application(), Configuration.Provider {
 
         if (BuildConfig.DEBUG) {
             Timber.plant(DebugTree())
+            StartupTrace.mark("IvyAndroidApp.onCreate")
         }
     }
 }

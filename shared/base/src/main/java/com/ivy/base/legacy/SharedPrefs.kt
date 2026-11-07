@@ -27,6 +27,19 @@ class SharedPrefs @Inject constructor(
         const val TRANSFERS_AS_INCOME_EXPENSE = "transfers_as_inc_exp"
         // ----------------------------- App Settings -----------------------------------------------
 
+        // ----------------------------- Visual Effects --------------------------------------------
+        const val VISUAL_EFFECTS_ENABLED = "visual_effects_enabled"
+        const val VISUAL_EFFECTS_BOTTOM_NAV = "visual_effects_bottom_nav"
+        const val VISUAL_EFFECTS_DASHBOARD_CARDS = "visual_effects_dashboard_cards"
+        const val VISUAL_EFFECTS_TRANSACTION_CARDS = "visual_effects_transaction_cards"
+        const val VISUAL_EFFECTS_FAB = "visual_effects_fab"
+        const val VISUAL_EFFECTS_BOTTOM_SHEETS = "visual_effects_bottom_sheets"
+        const val VISUAL_EFFECTS_DIALOGS = "visual_effects_dialogs"
+        const val VISUAL_EFFECTS_SETTINGS_PANELS = "visual_effects_settings_panels"
+        const val VISUAL_EFFECTS_SCROLL_ANIMATIONS = "visual_effects_scroll_animations"
+        const val VISUAL_EFFECTS_INTENSITY = "visual_effects_intensity"
+        // ----------------------------- Visual Effects --------------------------------------------
+
         // -------------------------------- Customer Journey ----------------------------------------
         const val _CARD_DISMISSED = "_cj_dismissed"
         // -------------------------------- Customer Journey ----------------------------------------
