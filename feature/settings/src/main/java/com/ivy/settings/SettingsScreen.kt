@@ -984,19 +984,20 @@ private fun AccountCard(
         Gradient.solid(Color.Transparent).asHorizontalBrush()
     }
     val glassBorder = if (glassEnabled) glassBorderColor(intensity) else Color.Transparent
+    val profileCardShape = UI.shapes.r2
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .fillMaxWidth()
-            .clip(UI.shapes.r2)
-            .background(UI.colors.medium, UI.shapes.r2)
+            .clip(profileCardShape)
+            .background(UI.colors.medium, profileCardShape)
             .thenIf(glassEnabled) {
-                background(glassOverlay, UI.shapes.r2)
+                background(glassOverlay, profileCardShape)
             }
             .thenIf(glassEnabled) {
-                border(1.dp, glassBorder, UI.shapes.r2)
+                border(1.dp, glassBorder, profileCardShape)
             }
             .clickable {
                 onCardClick()
@@ -1197,6 +1198,7 @@ private fun SettingsButtonRow(
         Gradient.solid(Color.Transparent).asHorizontalBrush()
     }
     val glassBorder = if (glassEnabled) glassBorderColor(intensity) else Color.Transparent
+    val rowShape = UI.shapes.r4
 
     Row(
         modifier = Modifier
@@ -1205,13 +1207,13 @@ private fun SettingsButtonRow(
                 drawColoredShadow(color = backgroundGradient.startColor)
             }
             .fillMaxWidth()
-            .clip(UI.shapes.r4)
-            .background(backgroundGradient.asHorizontalBrush(), UI.shapes.r4)
+            .clip(rowShape)
+            .background(backgroundGradient.asHorizontalBrush(), rowShape)
             .thenIf(glassEnabled) {
-                background(glassOverlay, UI.shapes.r4)
+                background(glassOverlay, rowShape)
             }
             .thenIf(glassEnabled) {
-                border(1.dp, glassBorder, UI.shapes.r4)
+                border(1.dp, glassBorder, rowShape)
             }
             .thenIf(tag.isNotEmpty()) {
                 testTag(tag)

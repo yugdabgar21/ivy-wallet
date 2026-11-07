@@ -231,13 +231,14 @@ private fun AccountCard(
     } else {
         UI.colors.medium
     }
+    val cardShape = UI.shapes.r4
 
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .fillMaxWidth()
-            .clip(UI.shapes.r4)
-            .border(2.dp, cardBorder, UI.shapes.r4)
+            .clip(cardShape)
+            .border(2.dp, cardBorder, cardShape)
             .clickable(
                 onClick = onClick
             )
@@ -297,15 +298,16 @@ private fun AccountHeader(
     } else {
         SolidColor(baseColor)
     }
+    val headerShape = UI.shapes.r4Top
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .thenIf(glassEnabled) {
-                background(headerBrush, UI.shapes.r4Top)
+                background(headerBrush, headerShape)
             }
             .thenIf(!glassEnabled) {
-                background(baseColor, UI.shapes.r4Top)
+                background(baseColor, headerShape)
             }
     ) {
         Spacer(Modifier.height(16.dp))

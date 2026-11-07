@@ -394,6 +394,7 @@ private fun RowScope.HeaderCard(
     } else {
         Color.Transparent
     }
+    val cardShape = UI.shapes.r4
 
     Column(
         modifier = Modifier
@@ -401,13 +402,13 @@ private fun RowScope.HeaderCard(
             .thenIf(percentVisible == 1f) {
                 drawColoredShadow(backgroundGradient.startColor)
             }
-            .clip(UI.shapes.r4)
+            .clip(cardShape)
             .background(backgroundGradient.asHorizontalBrush())
             .thenIf(glassEnabled) {
                 background(glassOverlay)
             }
             .thenIf(glassEnabled) {
-                border(1.dp, glassBorder, UI.shapes.r4)
+                border(1.dp, glassBorder, cardShape)
             }
             .testTag(testTag)
             .clickable(

@@ -38,6 +38,7 @@ fun IvyCircleButton(
     onClick: () -> Unit
 ) {
     val resolvedGlassBorder = glassBorder ?: Color.Transparent
+    val circleShape = UI.shapes.rFull
 
     IvyIcon(
         modifier = modifier
@@ -50,7 +51,7 @@ fun IvyCircleButton(
                     offsetY = 8.dp
                 )
             }
-            .clip(UI.shapes.rFull)
+            .clip(circleShape)
             .background(
                 brush = if (enabled) {
                     if (horizontalGradient) {
@@ -61,10 +62,10 @@ fun IvyCircleButton(
                 } else {
                     SolidColor(UI.colors.gray)
                 },
-                shape = UI.shapes.rFull
+                shape = circleShape
             )
             .thenIf(glassBorder != null) {
-                border(1.dp, resolvedGlassBorder, UI.shapes.rFull)
+                border(1.dp, resolvedGlassBorder, circleShape)
             }
             .clickable(onClick = onClick, enabled = enabled)
             .padding(all = backgroundPadding),

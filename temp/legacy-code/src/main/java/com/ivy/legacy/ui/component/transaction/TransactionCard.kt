@@ -135,24 +135,25 @@ fun TransactionCard(
     } else {
         Color.Transparent
     }
+    val cardShape = UI.shapes.r4
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .padding(top = 12.dp)
-            .clip(UI.shapes.r4)
+            .clip(cardShape)
             .clickable {
                 if (baseData.accounts.find { it.id == transaction.accountId } != null) {
                     onClick(transaction)
                 }
             }
-            .background(UI.colors.medium, UI.shapes.r4)
+            .background(UI.colors.medium, cardShape)
             .thenIf(glassEnabled) {
-                background(glassOverlay, UI.shapes.r4)
+                background(glassOverlay, cardShape)
             }
             .thenIf(glassEnabled) {
-                border(1.dp, glassBorder, UI.shapes.r4)
+                border(1.dp, glassBorder, cardShape)
             }
             .testTag("transaction_card")
     ) {

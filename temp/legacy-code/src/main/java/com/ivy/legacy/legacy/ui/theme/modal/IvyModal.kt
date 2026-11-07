@@ -119,6 +119,7 @@ fun BoxScope.IvyModal(
     } else {
         UI.colors.pure
     }
+    val sheetShape = UI.shapes.r2Top
 
     onScreenStart {
         rootView.addKeyboardListener {
@@ -189,12 +190,12 @@ fun BoxScope.IvyModal(
                 .fillMaxWidth()
                 .statusBarsPadding()
                 .padding(top = 24.dp)
-                .background(sheetBaseColor, UI.shapes.r2Top)
+                .background(sheetBaseColor, sheetShape)
                 .thenIf(sheetGlassEnabled) {
-                    background(sheetOverlay, UI.shapes.r2Top)
+                    background(sheetOverlay, sheetShape)
                 }
                 .thenIf(sheetGlassEnabled) {
-                    border(1.dp, sheetBorderColor, UI.shapes.r2Top)
+                    border(1.dp, sheetBorderColor, sheetShape)
                 }
                 .consumeClicks(rememberInteractionSource())
                 .thenIf(scrollState != null) {

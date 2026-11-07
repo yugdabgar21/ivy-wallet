@@ -128,6 +128,7 @@ fun BoxWithConstraintsScope.BottomBar(
     } else {
         pureBlur()
     }
+    val pillShape = UI.shapes.rFull
     val fabBorderColor = if (
         visualEffects?.componentEnabled(VisualEffectComponent.FAB) == true
     ) {
@@ -181,18 +182,18 @@ fun BoxWithConstraintsScope.BottomBar(
             .padding(horizontal = 16.dp)
             .shadow(
                 elevation = pillElevation,
-                shape = UI.shapes.rFull,
+                shape = pillShape,
                 clip = false
             )
-            .clip(UI.shapes.rFull)
-            .background(pillBaseColor, UI.shapes.rFull)
+            .clip(pillShape)
+            .background(pillBaseColor, pillShape)
             .thenIf(pillGlassEnabled) {
-                background(pillOverlay, UI.shapes.rFull)
+                background(pillOverlay, pillShape)
             }
             .border(
                 width = 1.dp,
                 color = pillBorder,
-                shape = UI.shapes.rFull
+                shape = pillShape
             )
             .alpha(1f - buttonsShownPercent)
             .clickableNoIndication(rememberInteractionSource()) {
