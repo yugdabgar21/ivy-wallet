@@ -139,6 +139,8 @@ fun BoxWithConstraintsScope.EditBottomSheet(
         sheetGlassEnabled -> UI.colors.pure.copy(alpha = 0.86f)
         else -> pureBlur()
     }
+    val panelShape = UI.shapes.r2Top
+    val panelFlatBorder = UI.colors.medium
     val panelOverlay = if (sheetGlassEnabled) {
         glassOverlayBrush(glassIntensity)
     } else {
@@ -215,7 +217,7 @@ fun BoxWithConstraintsScope.EditBottomSheet(
             .thenIf(realGlass) {
                 liquidGlassPanel(
                     backdrop = backdrop!!,
-                    shape = UI.shapes.r2Top,
+                    shape = panelShape,
                     cornerRadius = 24.dp,
                     blurRadius = LiquidGlassDefaults.BlurRadius,
                     refraction = true,
@@ -224,20 +226,20 @@ fun BoxWithConstraintsScope.EditBottomSheet(
             }
             .background(panelBaseColor, UI.shapes.r2Top)
             .thenIf(sheetGlassEnabled) {
-                background(panelOverlay!!, UI.shapes.r2Top)
+                background(panelOverlay!!, panelShape)
             }
             .thenIf(sheetGlassEnabled) {
                 border(
                     width = 1.dp,
                     brush = panelBorder!!,
-                    shape = UI.shapes.r2Top
+                    shape = panelShape
                 )
             }
             .thenIf(!sheetGlassEnabled) {
                 border(
                     width = 2.dp,
-                    color = UI.colors.medium,
-                    shape = UI.shapes.r2Top
+                    color = panelFlatBorder,
+                    shape = panelShape
                 )
             }
             .verticalSwipeListener(
