@@ -2,26 +2,36 @@ package com.ivy.main
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ivy.accounts.AccountsTab
 import com.ivy.base.model.TransactionType
+import com.ivy.design.utils.thenIf
 import com.ivy.home.HomeTab
 import com.ivy.legacy.IvyWalletPreview
 import com.ivy.legacy.data.model.MainTab
 import com.ivy.legacy.ivyWalletCtx
+import com.ivy.legacy.ui.liquidglass.isLiquidGlassSupported
+import com.ivy.legacy.ui.liquidglass.liquidGlassSource
+import com.ivy.legacy.ui.liquidglass.rememberLiquidGlassBackdrop
 import com.ivy.legacy.utils.onScreenStart
 import com.ivy.navigation.EditPlannedScreen
 import com.ivy.navigation.EditTransactionScreen
 import com.ivy.navigation.MainScreen
 import com.ivy.navigation.navigation
+import com.ivy.ui.effects.LocalVisualEffectsStore
+import com.ivy.ui.effects.VisualEffectComponent
 import com.ivy.wallet.domain.deprecated.logic.model.CreateAccountData
 import com.ivy.wallet.ui.theme.modal.edit.AccountModal
 import com.ivy.wallet.ui.theme.modal.edit.AccountModalData
@@ -60,9 +70,25 @@ private fun BoxWithConstraintsScope.UI(
     selectTab: (MainTab) -> Unit,
     onCreateAccount: (CreateAccountData) -> Unit,
 ) {
-    when (tab) {
-        MainTab.HOME -> HomeTab()
-        MainTab.ACCOUNTS -> AccountsTab()
+    val visualEffects = LocalVisualEffectsStore.current
+    val bottomNavGlassEnabled =
+        visualEffects?.componentEnabled(VisualEffectComponent.BOTTOM_NAV) == true
+    val backdrop = rememberLiquidGlassBackdrop()
+    val useBackdrop = bottomNavGlassEnabled &&
+            isLiquidGlassSupported() &&
+            !LocalInspectionMode.current
+
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .thenIf(useBackdrop) {
+                liquidGlassSource(backdrop)
+            }
+    ) {
+        when (tab) {
+            MainTab.HOME -> HomeTab()
+            MainTab.ACCOUNTS -> AccountsTab()
+        }
     }
 
     var accountModalData: AccountModalData? by remember { mutableStateOf(null) }
@@ -111,7 +137,9 @@ private fun BoxWithConstraintsScope.UI(
                 balance = 0.0,
                 baseCurrency = baseCurrency
             )
-        }
+        },
+
+        backdrop = backdrop.takeIf { useBackdrop }
     )
 
     AccountModal(

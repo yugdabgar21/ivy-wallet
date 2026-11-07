@@ -6,7 +6,6 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
@@ -14,15 +13,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,13 +42,16 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.ivy.design.l0_system.UI
@@ -53,6 +59,9 @@ import com.ivy.design.l0_system.style
 import com.ivy.design.utils.thenIf
 import com.ivy.legacy.data.model.MainTab
 import com.ivy.legacy.ivyWalletCtx
+import com.ivy.legacy.ui.liquidglass.LiquidGlassBackdrop
+import com.ivy.legacy.ui.liquidglass.LiquidGlassDefaults
+import com.ivy.legacy.ui.liquidglass.liquidGlassPanel
 import com.ivy.legacy.utils.clickableNoIndication
 import com.ivy.legacy.utils.densityScope
 import com.ivy.legacy.utils.lerp
@@ -74,6 +83,7 @@ import com.ivy.wallet.ui.theme.components.IvyCircleButton
 import com.ivy.wallet.ui.theme.components.IvyIcon
 import com.ivy.wallet.ui.theme.components.IvyOutlinedButton
 import com.ivy.wallet.ui.theme.gradientExpenses
+import com.ivy.wallet.ui.theme.glass.glassBorderBrush
 import com.ivy.wallet.ui.theme.glass.glassBorderColor
 import com.ivy.wallet.ui.theme.glass.glassOverlayBrush
 import com.ivy.wallet.ui.theme.modal.AddModalBackHandling
@@ -84,6 +94,19 @@ import kotlin.math.roundToInt
 
 val TRN_BUTTON_CLICK_AREA_HEIGHT = 150.dp
 val FAB_BUTTON_SIZE = 56.dp
+
+/**
+ * Floating pill navigation geometry. Blur radius and corner radius are exposed here so they can be
+ * tuned without touching the layout code.
+ */
+val PILL_WIDTH = 280.dp
+val PILL_HEIGHT = 64.dp
+val PILL_SIDE_MARGIN = 16.dp
+val PILL_BOTTOM_MARGIN = 8.dp
+val PILL_CORNER_RADIUS = LiquidGlassDefaults.CornerRadius
+val PILL_BLUR_RADIUS = LiquidGlassDefaults.BlurRadius
+val PILL_BORDER_WIDTH = 1.dp
+val TAB_MIN_TOUCH_TARGET = 48.dp
 
 @Deprecated("Old design system. Use `:ivy-design` and Material3")
 @Composable
@@ -97,6 +120,8 @@ fun BoxWithConstraintsScope.BottomBar(
     onAddPlannedPayment: () -> Unit,
 
     showAddAccountModal: () -> Unit,
+
+    backdrop: LiquidGlassBackdrop? = null,
 ) {
     val ivyContext = ivyWalletCtx()
 
@@ -104,31 +129,47 @@ fun BoxWithConstraintsScope.BottomBar(
     val pillGlassEnabled =
         visualEffects?.componentEnabled(VisualEffectComponent.BOTTOM_NAV) == true
     val glassIntensity = visualEffects?.intensity ?: VisualEffectsIntensity.DEFAULT
+    val glassFraction = VisualEffectsIntensity.fraction(glassIntensity)
+    val realGlass = pillGlassEnabled && backdrop != null && glassFraction > 0f
+
+    val pillShape = RoundedCornerShape(PILL_CORNER_RADIUS)
+    val pillBaseColor = when {
+        // Real backdrop blur needs a much lighter tint, otherwise the blur is invisible.
+        realGlass -> UI.colors.pure.copy(alpha = 0.34f + 0.08f * glassFraction)
+        pillGlassEnabled -> UI.colors.pure.copy(alpha = 0.86f)
+        else -> pureBlur()
+    }
     val pillOverlay = if (pillGlassEnabled) {
         glassOverlayBrush(glassIntensity)
     } else {
-        Gradient.solid(Color.Transparent).asHorizontalBrush()
+        SolidColor(Color.Transparent)
     }
-    val pillBorder = if (pillGlassEnabled) {
-        glassBorderColor(
+    val pillBorderBrush = if (pillGlassEnabled) {
+        glassBorderBrush(
             intensity = glassIntensity,
             base = UI.colors.medium.copy(alpha = 0.4f),
-            highlight = UI.colors.pureInverse.copy(alpha = 0.35f)
+            highlight = UI.colors.pureInverse.copy(alpha = 0.45f)
         )
     } else {
-        UI.colors.medium.copy(alpha = 0.4f)
+        SolidColor(UI.colors.medium.copy(alpha = 0.4f))
     }
     val pillElevation = if (pillGlassEnabled) {
         (8 + VisualEffectsIntensity.shadowElevationDp(glassIntensity)).dp
     } else {
         8.dp
     }
-    val pillBaseColor = if (pillGlassEnabled) {
-        UI.colors.pure.copy(alpha = 0.86f)
+    val glassModifier = if (realGlass && backdrop != null) {
+        Modifier.liquidGlassPanel(
+            backdrop = backdrop,
+            shape = pillShape,
+            cornerRadius = PILL_CORNER_RADIUS,
+            blurRadius = PILL_BLUR_RADIUS,
+            refraction = true,
+            intensity = glassFraction,
+        )
     } else {
-        pureBlur()
+        Modifier
     }
-    val pillShape = UI.shapes.rFull
     val fabBorderColor = if (
         visualEffects?.componentEnabled(VisualEffectComponent.FAB) == true
     ) {
@@ -176,29 +217,33 @@ fun BoxWithConstraintsScope.BottomBar(
     Row(
         modifier = Modifier
             .align(Alignment.BottomCenter)
-            .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(bottom = 8.dp)
-            .padding(horizontal = 16.dp)
+            .padding(bottom = PILL_BOTTOM_MARGIN)
+            .padding(horizontal = PILL_SIDE_MARGIN)
+            .widthIn(max = PILL_WIDTH)
+            .fillMaxWidth()
+            .height(PILL_HEIGHT)
             .shadow(
                 elevation = pillElevation,
                 shape = pillShape,
                 clip = false
             )
             .clip(pillShape)
+            .then(glassModifier)
             .background(pillBaseColor, pillShape)
             .thenIf(pillGlassEnabled) {
                 background(pillOverlay, pillShape)
             }
             .border(
-                width = 1.dp,
-                color = pillBorder,
+                width = PILL_BORDER_WIDTH,
+                brush = pillBorderBrush,
                 shape = pillShape
             )
             .alpha(1f - buttonsShownPercent)
             .clickableNoIndication(rememberInteractionSource()) {
                 // consume click
-            },
+            }
+            .padding(horizontal = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Tab(
@@ -238,8 +283,10 @@ fun BoxWithConstraintsScope.BottomBar(
     // ------------------------------------ BUTTONS--------------------------------------------------
     val fabStartX = ivyContext.screenWidth / 2 - FAB_BUTTON_SIZE.toDensityPx() / 2
     val navBarBottom = WindowInsets.navigationBars.getBottom(LocalDensity.current)
+    // Center the FAB inside the pill so it reads as one floating control.
+    val fabCenterOffset = PILL_BOTTOM_MARGIN + PILL_HEIGHT / 2
     val fabStartY = ivyContext.screenHeight - navBarBottom -
-            30.dp.toDensityPx() - FAB_BUTTON_SIZE.toDensityPx()
+            fabCenterOffset.toDensityPx() - FAB_BUTTON_SIZE.toDensityPx() / 2
 
     TransactionButtons(
         buttonsShownPercent = buttonsShownPercent,
@@ -698,25 +745,35 @@ private fun RowScope.Tab(
     selectedColor: Color,
     onClick: () -> Unit,
 ) {
-    val iconTint by animateColorAsState(
-        targetValue = if (selected) selectedColor else UI.colors.pureInverse,
+    val contentColor by animateColorAsState(
+        targetValue = if (selected) White else UI.colors.pureInverse,
+        animationSpec = springBounceFast()
+    )
+
+    val capsuleColor by animateColorAsState(
+        targetValue = if (selected) selectedColor else Color.Transparent,
         animationSpec = springBounceFast()
     )
 
     val iconScale by animateFloatAsState(
-        targetValue = if (selected) 1.08f else 1f,
+        targetValue = if (selected) 1.06f else 1f,
         animationSpec = springBounceFast()
     )
 
-    val tabShape = UI.shapes.rFull
+    val tabShape = RoundedCornerShape(percent = 50)
 
     Row(
         modifier = Modifier
             .weight(1f)
-            .clip(UI.shapes.rFull)
-            .clickable(onClick = onClick)
-            .defaultMinSize(minHeight = 48.dp)
-            .padding(top = 12.dp, bottom = 16.dp)
+            .heightIn(min = TAB_MIN_TOUCH_TARGET)
+            .clip(tabShape)
+            .selectable(
+                selected = selected,
+                interactionSource = rememberInteractionSource(),
+                indication = null,
+                role = Role.Tab,
+                onClick = onClick,
+            )
             .testTag(name.lowercase()),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
@@ -724,20 +781,18 @@ private fun RowScope.Tab(
         Row(
             modifier = Modifier
                 .clip(tabShape)
-                .thenIf(selected) {
-                    background(
-                        color = selectedColor.copy(alpha = 0.12f),
-                        shape = tabShape
-                    )
-                }
-                .padding(horizontal = 10.dp, vertical = 6.dp),
+                .background(
+                    color = capsuleColor,
+                    shape = tabShape
+                )
+                .padding(horizontal = 8.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             IvyIcon(
                 modifier = Modifier.scale(iconScale),
                 icon = icon,
-                tint = iconTint,
+                tint = contentColor,
                 contentDescription = name
             )
 
@@ -746,9 +801,12 @@ private fun RowScope.Tab(
 
                 Text(
                     text = name,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis,
                     style = UI.typo.c.style(
                         fontWeight = FontWeight.Bold,
-                        color = selectedColor
+                        color = contentColor
                     )
                 )
             }
