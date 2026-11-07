@@ -24,6 +24,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -40,6 +41,7 @@ import com.ivy.design.l0_system.Orange
 import com.ivy.design.l0_system.UI
 import com.ivy.design.l0_system.style
 import com.ivy.design.utils.hideKeyboard
+import com.ivy.design.utils.thenIf
 import com.ivy.legacy.IvyWalletPreview
 import com.ivy.legacy.data.EditTransactionDisplayLoan
 import com.ivy.legacy.datamodel.Account
@@ -48,12 +50,17 @@ import com.ivy.legacy.ui.component.edit.TransactionDateTime
 import com.ivy.legacy.ui.component.edit.core.Description
 import com.ivy.legacy.ui.component.tags.AddTagButton
 import com.ivy.legacy.ui.component.tags.ShowTagModal
+import com.ivy.legacy.ui.liquidglass.isLiquidGlassSupported
+import com.ivy.legacy.ui.liquidglass.liquidGlassSource
+import com.ivy.legacy.ui.liquidglass.rememberLiquidGlassBackdrop
 import com.ivy.legacy.utils.onScreenStart
 import com.ivy.navigation.EditPlannedScreen
 import com.ivy.navigation.EditTransactionScreen
 import com.ivy.navigation.IvyPreview
 import com.ivy.navigation.navigation
 import com.ivy.navigation.screenScopedViewModel
+import com.ivy.ui.effects.LocalVisualEffectsStore
+import com.ivy.ui.effects.VisualEffectComponent
 import com.ivy.ui.R
 import com.ivy.wallet.domain.data.CustomExchangeRateState
 import com.ivy.wallet.domain.data.IvyCurrency
@@ -235,6 +242,14 @@ private fun BoxWithConstraintsScope.UI(
     hasChanges: Boolean = false,
 
     ) {
+    val visualEffects = LocalVisualEffectsStore.current
+    val sheetGlassEnabled =
+        visualEffects?.componentEnabled(VisualEffectComponent.BOTTOM_SHEETS) == true
+    val backdrop = rememberLiquidGlassBackdrop()
+    val useBackdrop = sheetGlassEnabled &&
+            isLiquidGlassSupported() &&
+            !LocalInspectionMode.current
+
     var chooseCategoryModalVisible by remember { mutableStateOf(false) }
     var tagModelVisible by remember { mutableStateOf(false) }
     var categoryModalData: CategoryModalData? by remember { mutableStateOf(null) }
@@ -281,6 +296,7 @@ private fun BoxWithConstraintsScope.UI(
             .statusBarsPadding()
             .navigationBarsPadding()
             .verticalScroll(scrollState)
+            .thenIf(useBackdrop) { liquidGlassSource(backdrop) }
     ) {
         Spacer(Modifier.height(16.dp))
 
@@ -445,6 +461,7 @@ private fun BoxWithConstraintsScope.UI(
         currency = baseCurrency,
         convertedAmount = customExchangeRateState.convertedAmount,
         convertedAmountCurrencyCode = customExchangeRateState.toCurrencyCode,
+        backdrop = backdrop.takeIf { useBackdrop },
 
         ActionButton = {
             if (screen.initialTransactionId != null) {

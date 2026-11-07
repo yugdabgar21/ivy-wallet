@@ -9,6 +9,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -99,7 +100,7 @@ val FAB_BUTTON_SIZE = 56.dp
  * Floating pill navigation geometry. Blur radius and corner radius are exposed here so they can be
  * tuned without touching the layout code.
  */
-val PILL_WIDTH = 280.dp
+val PILL_WIDTH = 312.dp
 val PILL_HEIGHT = 64.dp
 val PILL_SIDE_MARGIN = 16.dp
 val PILL_BOTTOM_MARGIN = 8.dp
@@ -107,6 +108,8 @@ val PILL_CORNER_RADIUS = LiquidGlassDefaults.CornerRadius
 val PILL_BLUR_RADIUS = LiquidGlassDefaults.BlurRadius
 val PILL_BORDER_WIDTH = 1.dp
 val TAB_MIN_TOUCH_TARGET = 48.dp
+// Fixed gap between the selected tab capsule and the central FAB, equal on both sides.
+val TAB_FAB_GAP = 12.dp
 
 @Deprecated("Old design system. Use `:ivy-design` and Material3")
 @Composable
@@ -250,7 +253,9 @@ fun BoxWithConstraintsScope.BottomBar(
             icon = R.drawable.ic_home,
             name = stringResource(R.string.home),
             selected = tab == MainTab.HOME,
-            selectedColor = Ivy
+            selectedColor = Ivy,
+            capsuleArrangement = Arrangement.End,
+            capsulePadding = PaddingValues(end = TAB_FAB_GAP),
         ) {
             selectTab(MainTab.HOME)
         }
@@ -261,7 +266,9 @@ fun BoxWithConstraintsScope.BottomBar(
             icon = R.drawable.ic_accounts,
             name = stringResource(R.string.accounts),
             selected = tab == MainTab.ACCOUNTS,
-            selectedColor = Green
+            selectedColor = Green,
+            capsuleArrangement = Arrangement.Start,
+            capsulePadding = PaddingValues(start = TAB_FAB_GAP),
         ) {
             selectTab(MainTab.ACCOUNTS)
         }
@@ -743,6 +750,8 @@ private fun RowScope.Tab(
     name: String,
     selected: Boolean,
     selectedColor: Color,
+    capsuleArrangement: Arrangement.Horizontal,
+    capsulePadding: PaddingValues,
     onClick: () -> Unit,
 ) {
     val contentColor by animateColorAsState(
@@ -766,6 +775,7 @@ private fun RowScope.Tab(
         modifier = Modifier
             .weight(1f)
             .heightIn(min = TAB_MIN_TOUCH_TARGET)
+            .padding(capsulePadding)
             .clip(tabShape)
             .selectable(
                 selected = selected,
@@ -775,7 +785,7 @@ private fun RowScope.Tab(
                 onClick = onClick,
             )
             .testTag(name.lowercase()),
-        horizontalArrangement = Arrangement.Center,
+        horizontalArrangement = capsuleArrangement,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
@@ -790,7 +800,7 @@ private fun RowScope.Tab(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IvyIcon(
-                modifier = Modifier.scale(iconScale),
+                modifier = Modifier.size(24.dp).scale(iconScale),
                 icon = icon,
                 tint = contentColor,
                 contentDescription = name

@@ -58,6 +58,9 @@ import com.ivy.legacy.utils.onScreenStart
 import com.ivy.design.utils.thenIf
 import com.ivy.navigation.Navigation
 import com.ivy.navigation.navigation
+import com.ivy.legacy.ui.liquidglass.LiquidGlassBackdrop
+import com.ivy.legacy.ui.liquidglass.LiquidGlassDefaults
+import com.ivy.legacy.ui.liquidglass.liquidGlassPanel
 import com.ivy.ui.effects.LocalVisualEffectsStore
 import com.ivy.ui.effects.VisualEffectComponent
 import com.ivy.ui.effects.VisualEffectsIntensity
@@ -88,6 +91,7 @@ fun BoxScope.IvyModal(
     scrollState: ScrollState? = rememberScrollState(),
     shiftIfKeyboardShown: Boolean = true,
     includeActionsRowPadding: Boolean = true,
+    backdrop: LiquidGlassBackdrop? = null,
     Content: @Composable ColumnScope.() -> Unit
 ) {
     val rootView = LocalView.current
@@ -101,11 +105,13 @@ fun BoxScope.IvyModal(
     val sheetGlassEnabled =
         visualEffects?.componentEnabled(VisualEffectComponent.BOTTOM_SHEETS) == true
     val glassIntensity = visualEffects?.intensity ?: VisualEffectsIntensity.DEFAULT
+    val glassFraction = VisualEffectsIntensity.fraction(glassIntensity)
+    val backdropGlass = backdrop != null && sheetGlassEnabled && glassFraction > 0f
 
-    val dialogScrim: Brush = if (dialogGlassEnabled) {
-        glassScrimBrush(glassIntensity)
-    } else {
-        SolidColor(mediumBlur())
+    val dialogScrim: Brush = when {
+        backdrop != null -> SolidColor(UI.colors.medium.copy(alpha = 0.5f))
+        dialogGlassEnabled -> glassScrimBrush(glassIntensity)
+        else -> SolidColor(mediumBlur())
     }
     val sheetOverlay: Brush = if (sheetGlassEnabled) {
         glassOverlayBrush(glassIntensity)
@@ -114,10 +120,10 @@ fun BoxScope.IvyModal(
     }
     val sheetBorderColor: Color =
         if (sheetGlassEnabled) glassBorderColor(glassIntensity) else Color.Transparent
-    val sheetBaseColor = if (sheetGlassEnabled) {
-        UI.colors.pure.copy(alpha = 0.93f)
-    } else {
-        UI.colors.pure
+    val sheetBaseColor = when {
+        backdropGlass -> UI.colors.pure.copy(alpha = 0.34f + 0.08f * glassFraction)
+        sheetGlassEnabled -> UI.colors.pure.copy(alpha = 0.93f)
+        else -> UI.colors.pure
     }
     val sheetShape = UI.shapes.r2Top
 
@@ -190,6 +196,16 @@ fun BoxScope.IvyModal(
                 .fillMaxWidth()
                 .statusBarsPadding()
                 .padding(top = 24.dp)
+                .thenIf(backdropGlass) {
+                    liquidGlassPanel(
+                        backdrop = backdrop!!,
+                        shape = sheetShape,
+                        cornerRadius = 24.dp,
+                        blurRadius = LiquidGlassDefaults.BlurRadius,
+                        refraction = true,
+                        intensity = glassFraction,
+                    )
+                }
                 .background(sheetBaseColor, sheetShape)
                 .thenIf(sheetGlassEnabled) {
                     background(sheetOverlay, sheetShape)

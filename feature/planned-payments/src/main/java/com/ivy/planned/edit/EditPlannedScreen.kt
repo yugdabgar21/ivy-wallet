@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
@@ -27,11 +28,17 @@ import androidx.compose.ui.unit.dp
 import com.ivy.base.model.TransactionType
 import com.ivy.data.model.Category
 import com.ivy.data.model.IntervalType
+import com.ivy.design.utils.thenIf
 import com.ivy.legacy.IvyWalletPreview
 import com.ivy.legacy.datamodel.Account
+import com.ivy.legacy.ui.liquidglass.isLiquidGlassSupported
+import com.ivy.legacy.ui.liquidglass.liquidGlassSource
+import com.ivy.legacy.ui.liquidglass.rememberLiquidGlassBackdrop
 import com.ivy.legacy.utils.onScreenStart
 import com.ivy.navigation.EditPlannedScreen
 import com.ivy.navigation.screenScopedViewModel
+import com.ivy.ui.effects.LocalVisualEffectsStore
+import com.ivy.ui.effects.VisualEffectComponent
 import com.ivy.ui.R
 import com.ivy.wallet.ui.edit.core.Category
 import com.ivy.legacy.ui.component.edit.core.Description
@@ -90,12 +97,21 @@ private fun BoxWithConstraintsScope.UI(
     }
     val titleFocus = FocusRequester()
 
+    val visualEffects = LocalVisualEffectsStore.current
+    val sheetGlassEnabled =
+        visualEffects?.componentEnabled(VisualEffectComponent.BOTTOM_SHEETS) == true
+    val backdrop = rememberLiquidGlassBackdrop()
+    val useBackdrop = sheetGlassEnabled &&
+            isLiquidGlassSupported() &&
+            !LocalInspectionMode.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
             .navigationBarsPadding()
             .verticalScroll(rememberScrollState())
+            .thenIf(useBackdrop) { liquidGlassSource(backdrop) }
     ) {
         Spacer(Modifier.height(16.dp))
 
@@ -225,6 +241,7 @@ private fun BoxWithConstraintsScope.UI(
         toAccount = null,
         amount = state.amount,
         currency = state.currency,
+        backdrop = backdrop.takeIf { useBackdrop },
 
         ActionButton = {
             ModalSet(

@@ -62,7 +62,16 @@ import com.ivy.legacy.utils.navigationBarInsets
 import com.ivy.legacy.utils.onScreenStart
 import com.ivy.legacy.utils.springBounce
 import com.ivy.design.utils.thenIf
+import com.ivy.legacy.ui.liquidglass.LiquidGlassBackdrop
+import com.ivy.legacy.ui.liquidglass.LiquidGlassDefaults
+import com.ivy.legacy.ui.liquidglass.liquidGlassPanel
 import com.ivy.legacy.utils.verticalSwipeListener
+import com.ivy.ui.effects.LocalVisualEffectsStore
+import com.ivy.ui.effects.VisualEffectComponent
+import com.ivy.ui.effects.VisualEffectsIntensity
+import com.ivy.wallet.ui.theme.glass.glassBorderBrush
+import com.ivy.wallet.ui.theme.glass.glassOverlayBrush
+import com.ivy.wallet.ui.theme.pureBlur
 import com.ivy.base.model.TransactionType
 import com.ivy.legacy.utils.rememberInteractionSource
 import com.ivy.legacy.utils.rememberSwipeListenerState
@@ -115,9 +124,21 @@ fun BoxWithConstraintsScope.EditBottomSheet(
     modifier: Modifier = Modifier, // Modifier comes after other parameters
     convertedAmount: Double? = null,
     convertedAmountCurrencyCode: String? = null,
+    backdrop: LiquidGlassBackdrop? = null,
 ) {
     val rootView = LocalView.current
     var keyboardShown by remember { mutableStateOf(false) }
+    val visualEffects = LocalVisualEffectsStore.current
+    val sheetGlassEnabled =
+        visualEffects?.componentEnabled(VisualEffectComponent.BOTTOM_SHEETS) == true
+    val glassIntensity = visualEffects?.intensity ?: VisualEffectsIntensity.DEFAULT
+    val glassFraction = VisualEffectsIntensity.fraction(glassIntensity)
+    val realGlass = backdrop != null && sheetGlassEnabled && glassFraction > 0f
+    val panelBaseColor = when {
+        realGlass -> UI.colors.pure.copy(alpha = 0.34f + 0.08f * glassFraction)
+        sheetGlassEnabled -> UI.colors.pure.copy(alpha = 0.86f)
+        else -> pureBlur()
+    }
 
     onScreenStart {
         rootView.addKeyboardListener {
@@ -177,12 +198,38 @@ fun BoxWithConstraintsScope.EditBottomSheet(
 //                borderRadius = 24.dp,
 //                shadowRadius = 24.dp
 //            )
-            .border(
-                width = 2.dp,
-                color = UI.colors.medium,
-                shape = UI.shapes.r2Top
-            )
-            .background(UI.colors.pure, UI.shapes.r2Top)
+            .thenIf(realGlass) {
+                liquidGlassPanel(
+                    backdrop = backdrop!!,
+                    shape = UI.shapes.r2Top,
+                    cornerRadius = 24.dp,
+                    blurRadius = LiquidGlassDefaults.BlurRadius,
+                    refraction = true,
+                    intensity = glassFraction,
+                )
+            }
+            .background(panelBaseColor, UI.shapes.r2Top)
+            .thenIf(sheetGlassEnabled) {
+                background(glassOverlayBrush(glassIntensity), UI.shapes.r2Top)
+            }
+            .thenIf(sheetGlassEnabled) {
+                border(
+                    width = 1.dp,
+                    brush = glassBorderBrush(
+                        intensity = glassIntensity,
+                        base = UI.colors.medium.copy(alpha = 0.4f),
+                        highlight = UI.colors.pureInverse.copy(alpha = 0.45f)
+                    ),
+                    shape = UI.shapes.r2Top
+                )
+            }
+            .thenIf(!sheetGlassEnabled) {
+                border(
+                    width = 2.dp,
+                    color = UI.colors.medium,
+                    shape = UI.shapes.r2Top
+                )
+            }
             .verticalSwipeListener(
                 sensitivity = SWIPE_UP_EXPANDED_THRESHOLD,
                 state = rememberSwipeListenerState(),
@@ -306,7 +353,8 @@ fun BoxWithConstraintsScope.EditBottomSheet(
         amountSpacerTop = 48.dp,
         dismiss = {
             setAmountModalShown(false)
-        }
+        },
+        backdrop = backdrop,
     ) {
         onAmountChanged(it)
     }

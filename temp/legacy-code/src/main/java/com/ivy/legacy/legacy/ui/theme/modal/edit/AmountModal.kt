@@ -42,6 +42,7 @@ import com.ivy.design.l0_system.UI
 import com.ivy.design.l0_system.style
 import com.ivy.domain.di.FeaturesEntryPoint
 import com.ivy.legacy.IvyWalletPreview
+import com.ivy.legacy.ui.liquidglass.LiquidGlassBackdrop
 import com.ivy.legacy.utils.amountToDouble
 import com.ivy.legacy.utils.amountToDoubleOrNull
 import com.ivy.legacy.utils.format
@@ -75,6 +76,7 @@ fun BoxWithConstraintsScope.AmountModal(
     Header: (@Composable () -> Unit)? = null,
     amountSpacerTop: Dp = 64.dp,
     onAmountChanged: (Double) -> Unit,
+    backdrop: LiquidGlassBackdrop? = null,
 ) {
     var amount by remember(id) {
         mutableStateOf(
@@ -96,6 +98,7 @@ fun BoxWithConstraintsScope.AmountModal(
         id = id,
         visible = visible,
         dismiss = dismiss,
+        backdrop = backdrop,
         PrimaryAction = {
             IvyIcon(
                 modifier = circleButtonModifier(
