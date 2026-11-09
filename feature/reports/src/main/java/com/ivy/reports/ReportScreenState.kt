@@ -4,6 +4,7 @@ import com.ivy.base.legacy.TransactionHistoryItem
 import com.ivy.data.model.Category
 import com.ivy.data.model.Tag
 import com.ivy.legacy.datamodel.Account
+import com.ivy.piechart.CategoryAmount
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import java.util.*
@@ -33,5 +34,7 @@ data class ReportScreenState(
     val showTransfersAsIncExpCheckbox: Boolean = false,
     val treatTransfersAsIncExp: Boolean = false,
     val allTags: ImmutableList<Tag> = persistentListOf(),
-    val showAccountColorsInTransactions: Boolean = false
+    val showAccountColorsInTransactions: Boolean = false,
+    val expenseCategoryAmounts: ImmutableList<CategoryAmount> = persistentListOf(),
+    val incomeCategoryAmounts: ImmutableList<CategoryAmount> = persistentListOf(),
 )

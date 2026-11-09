@@ -233,6 +233,8 @@
     <string name="add_keyword">Add a keyword</string>
     <string name="excludes_uppercase">EXCLUDES</string>
     <string name="no_transactions_for_your_filter">No matching transactions for the selected filter.</string>
+    <string name="no_expenses_for_this_period">No expenses for this period.</string>
+    <string name="no_income_for_this_period">No income for this period.</string>
     <string name="no_filter">No Filter</string>
     <string name="invalid_filter_warning">You need to apply a valid filter before generating a report.</string>
     <string name="set_filter">Set Filter</string>

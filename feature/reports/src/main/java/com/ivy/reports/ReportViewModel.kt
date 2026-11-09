@@ -25,6 +25,7 @@ import com.ivy.data.model.Transaction
 import com.ivy.data.model.TransactionId
 import com.ivy.data.model.Transfer
 import com.ivy.data.model.primitive.ColorInt
+import com.ivy.data.model.primitive.IconAsset
 import com.ivy.data.model.primitive.NotBlankTrimmedString
 import com.ivy.data.repository.CategoryRepository
 import com.ivy.data.repository.TagRepository
@@ -45,6 +46,7 @@ import com.ivy.legacy.utils.timeNowUTC
 import com.ivy.legacy.utils.toLowerCaseLocal
 import com.ivy.legacy.utils.uiThread
 import com.ivy.ui.ComposeViewModel
+import com.ivy.piechart.CategoryAmount
 import com.ivy.ui.R
 import com.ivy.wallet.domain.action.account.AccountsAct
 import com.ivy.wallet.domain.action.exchange.ExchangeAct
@@ -100,6 +102,14 @@ class ReportViewModel @Inject constructor(
             id = CategoryId(UUID.randomUUID()),
             orderNum = 0.0,
         )
+    private val accountTransfersCategory =
+        Category(
+            name = NotBlankTrimmedString.unsafe(stringRes(R.string.account_transfers)),
+            color = ColorInt(com.ivy.wallet.ui.theme.RedLight.toArgb()),
+            icon = IconAsset.unsafe("transfer"),
+            id = CategoryId(UUID.randomUUID()),
+            orderNum = 0.0,
+        )
     private var baseCurrency by mutableStateOf("")
     private var categories by mutableStateOf<ImmutableList<Category>>(persistentListOf())
     private var historyIncomeExpense by mutableStateOf(IncomeExpenseTransferPair.zero())
@@ -126,6 +136,11 @@ class ReportViewModel @Inject constructor(
     private var showTransfersAsIncExpCheckbox by mutableStateOf(false)
     private var treatTransfersAsIncExp by mutableStateOf(false)
     private var allTags by mutableStateOf<ImmutableList<Tag>>(persistentListOf())
+
+    // Stored legacy trns for chart recomputation on transfers toggle
+    private var historyLegacyTrns by mutableStateOf<ImmutableList<LegacyTransaction>>(persistentListOf())
+    private var expenseCategoryAmounts by mutableStateOf<ImmutableList<CategoryAmount>>(persistentListOf())
+    private var incomeCategoryAmounts by mutableStateOf<ImmutableList<CategoryAmount>>(persistentListOf())
 
     private var tagSearchJob: Job? = null
     private val tagSearchDebounceTimeInMills: Long = 500
@@ -165,7 +180,9 @@ class ReportViewModel @Inject constructor(
             upcomingIncome = upcomingIncome,
             upcomingTransactions = upcomingTransactions,
             allTags = allTags,
-            showAccountColorsInTransactions = getShouldShowAccountSpecificColorInTransactions()
+            showAccountColorsInTransactions = getShouldShowAccountSpecificColorInTransactions(),
+            expenseCategoryAmounts = expenseCategoryAmounts,
+            incomeCategoryAmounts = incomeCategoryAmounts,
         )
     }
 
@@ -224,6 +241,10 @@ class ReportViewModel @Inject constructor(
     private suspend fun setFilter(reportFilter: ReportFilter?) {
         scopedIOThread { scope ->
             if (reportFilter == null) {
+                // Clear chart data when filter is removed
+                historyLegacyTrns = persistentListOf()
+                expenseCategoryAmounts = persistentListOf()
+                incomeCategoryAmounts = persistentListOf()
                 setReportValues(
                     income = 0.00,
                     expense = 0.00,
@@ -315,6 +336,30 @@ class ReportViewModel @Inject constructor(
                 )
             )
 
+            // Convert to legacy for chart computation and state
+            val legacyTrns = transactionsList.map {
+                it.toLegacy(transactionMapper)
+            }.toImmutableList()
+
+            // Store for transfers-toggle recomputation
+            historyLegacyTrns = legacyTrns
+
+            // Compute donut chart data from already-filtered legacy transactions
+            expenseCategoryAmounts = computeCategoryChartData(
+                legacyTrns = legacyTrns,
+                type = TransactionType.EXPENSE,
+                treatTransfersAsIncExp = treatTransfersAsIncExp,
+                baseCurrency = baseCurrency,
+                accounts = tempAccounts
+            )
+            incomeCategoryAmounts = computeCategoryChartData(
+                legacyTrns = legacyTrns,
+                type = TransactionType.INCOME,
+                treatTransfersAsIncExp = treatTransfersAsIncExp,
+                baseCurrency = baseCurrency,
+                accounts = tempAccounts
+            )
+
             setReportValues(
                 income = tempIncome,
                 expense = tempExpenses,
@@ -330,9 +375,7 @@ class ReportViewModel @Inject constructor(
                 accounts = tempAccounts.toImmutableList(),
                 reportFilter = reportFilter,
                 accountIdFilters = accountFilterIdList.await().toImmutableList(),
-                transactions = transactionsList.map {
-                    it.toLegacy(transactionMapper)
-                }.toImmutableList(),
+                transactions = legacyTrns,
                 balanceValue = tempBalance
             )
 
@@ -589,12 +632,64 @@ class ReportViewModel @Inject constructor(
         filterOverlayVisible = visible
     }
 
-    private fun onTreatTransfersAsIncomeExpense(transfersAsIncExp: Boolean) {
+    private suspend fun onTreatTransfersAsIncomeExpense(transfersAsIncExp: Boolean) {
         income = historyIncomeExpense.income.toDouble() +
                 if (transfersAsIncExp) historyIncomeExpense.transferIncome.toDouble() else 0.0
         expenses = historyIncomeExpense.expense.toDouble() +
                 if (transfersAsIncExp) historyIncomeExpense.transferExpense.toDouble() else 0.0
         treatTransfersAsIncExp = transfersAsIncExp
+
+        // Recompute chart data with the new transfers-as-inc-exp setting
+        val legacyTrns = historyLegacyTrns
+        if (legacyTrns.isNotEmpty()) {
+            expenseCategoryAmounts = computeCategoryChartData(
+                legacyTrns = legacyTrns,
+                type = TransactionType.EXPENSE,
+                treatTransfersAsIncExp = transfersAsIncExp,
+                baseCurrency = baseCurrency,
+                accounts = accounts
+            )
+            incomeCategoryAmounts = computeCategoryChartData(
+                legacyTrns = legacyTrns,
+                type = TransactionType.INCOME,
+                treatTransfersAsIncExp = transfersAsIncExp,
+                baseCurrency = baseCurrency,
+                accounts = accounts
+            )
+        }
+    }
+
+    /**
+     * Computes per-category amounts for the donut chart from already-filtered legacy transactions.
+     * No DB queries are triggered — works entirely from the in-memory list.
+     */
+    private suspend fun computeCategoryChartData(
+        legacyTrns: List<LegacyTransaction>,
+        type: TransactionType,
+        treatTransfersAsIncExp: Boolean,
+        baseCurrency: String,
+        accounts: List<Account>
+    ): ImmutableList<CategoryAmount> {
+        return ReportChartDataCalculator.computeCategoryChartData(
+            legacyTrns = legacyTrns,
+            type = type,
+            treatTransfersAsIncExp = treatTransfersAsIncExp,
+            baseCurrency = baseCurrency,
+            accounts = accounts,
+            categories = categories,
+            accountTransfersCategory = accountTransfersCategory,
+            exchange = { amount, fromCurrency ->
+                exchangeAct(
+                    ExchangeAct.Input(
+                        data = ExchangeData(
+                            baseCurrency = baseCurrency,
+                            fromCurrency = fromCurrency
+                        ),
+                        amount = amount
+                    )
+                ).orZero().toDouble()
+            }
+        )
     }
 
     private suspend fun skipTransaction(transaction: Transaction) {

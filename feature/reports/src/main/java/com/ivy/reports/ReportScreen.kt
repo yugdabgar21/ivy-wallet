@@ -5,18 +5,22 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -44,10 +48,14 @@ import com.ivy.legacy.ui.component.IncomeExpensesCards
 import com.ivy.legacy.ui.component.transaction.TransactionsDividerLine
 import com.ivy.legacy.ui.component.transaction.transactions
 import com.ivy.legacy.utils.clickableNoIndication
+import com.ivy.legacy.utils.format
 import com.ivy.legacy.utils.rememberInteractionSource
 import com.ivy.navigation.PieChartStatisticScreen
 import com.ivy.navigation.ReportScreen
 import com.ivy.navigation.navigation
+import com.ivy.piechart.CategoryAmount
+import com.ivy.piechart.PieChart
+import com.ivy.piechart.SelectedCategory
 import com.ivy.ui.R
 import com.ivy.ui.rememberScrollPositionListState
 import com.ivy.wallet.domain.pure.data.IncomeExpensePair
@@ -68,6 +76,8 @@ import com.ivy.wallet.ui.theme.components.IvyIcon
 import com.ivy.wallet.ui.theme.components.IvyOutlinedButton
 import com.ivy.wallet.ui.theme.components.IvyToolbar
 import com.ivy.wallet.ui.theme.pureBlur
+import com.ivy.wallet.ui.theme.toComposeColor
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import java.util.UUID
@@ -165,7 +175,54 @@ private fun BoxWithConstraintsScope.UI(
                 }
             )
 
-            Spacer(Modifier.height(20.dp))
+            // Donut charts — only shown when a filter is active
+            if (state.filter != null) {
+                Spacer(Modifier.height(24.dp))
+
+                DonutChartCard(
+                    title = stringResource(R.string.expenses),
+                    type = TransactionType.EXPENSE,
+                    categoryAmounts = state.expenseCategoryAmounts,
+                    baseCurrency = state.baseCurrency,
+                    onChartClick = {
+                        if (state.transactions.isNotEmpty()) {
+                            nav.navigateTo(
+                                PieChartStatisticScreen(
+                                    type = TransactionType.EXPENSE,
+                                    transactions = legacyTransactions.toImmutableList(),
+                                    accountList = state.accountIdFilters,
+                                    treatTransfersAsIncomeExpense = state.treatTransfersAsIncExp
+                                )
+                            )
+                        }
+                    }
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                DonutChartCard(
+                    title = stringResource(R.string.income),
+                    type = TransactionType.INCOME,
+                    categoryAmounts = state.incomeCategoryAmounts,
+                    baseCurrency = state.baseCurrency,
+                    onChartClick = {
+                        if (state.transactions.isNotEmpty()) {
+                            nav.navigateTo(
+                                PieChartStatisticScreen(
+                                    type = TransactionType.INCOME,
+                                    transactions = legacyTransactions.toImmutableList(),
+                                    accountList = state.accountIdFilters,
+                                    treatTransfersAsIncomeExpense = state.treatTransfersAsIncExp
+                                )
+                            )
+                        }
+                    }
+                )
+
+                Spacer(Modifier.height(24.dp))
+            } else {
+                Spacer(Modifier.height(20.dp))
+            }
 
             IncomeExpensesCards(
                 history = state.history,
@@ -311,6 +368,156 @@ private fun BoxWithConstraintsScope.UI(
     )
 }
 
+// ---------------------------------------------------------------------------
+// Donut Chart Card
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun DonutChartCard(
+    title: String,
+    type: TransactionType,
+    categoryAmounts: ImmutableList<CategoryAmount>,
+    baseCurrency: String,
+    onChartClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth()
+            .clip(UI.shapes.r3)
+            .background(UI.colors.medium)
+            .padding(vertical = 16.dp)
+    ) {
+        Text(
+            modifier = Modifier.padding(start = 20.dp, bottom = 8.dp),
+            text = title,
+            style = UI.typo.b1.style(fontWeight = FontWeight.ExtraBold)
+        )
+
+        if (categoryAmounts.isEmpty()) {
+            DonutChartEmptyState(type = type)
+        } else {
+            val totalAmount = categoryAmounts.sumOf { it.amount }
+
+            PieChart(
+                type = type,
+                categoryAmounts = categoryAmounts,
+                selectedCategory = null,
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .clickableNoIndication(rememberInteractionSource()) { onChartClick() }
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            categoryAmounts.forEach { catAmt ->
+                CategoryLegendRow(
+                    categoryAmount = catAmt,
+                    baseCurrency = baseCurrency,
+                    totalAmount = totalAmount,
+                    onClick = onChartClick
+                )
+                Spacer(Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun DonutChartEmptyState(type: TransactionType) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        IvyIcon(
+            icon = if (type == TransactionType.EXPENSE) R.drawable.ic_expense else R.drawable.ic_income,
+            tint = Gray
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = if (type == TransactionType.EXPENSE) {
+                stringResource(R.string.no_expenses_for_this_period)
+            } else {
+                stringResource(R.string.no_income_for_this_period)
+            },
+            style = UI.typo.b2.style(
+                color = Gray,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
+            )
+        )
+    }
+}
+
+@Composable
+private fun CategoryLegendRow(
+    categoryAmount: CategoryAmount,
+    baseCurrency: String,
+    totalAmount: Double,
+    onClick: () -> Unit,
+) {
+    val category = categoryAmount.category
+    val amount = categoryAmount.amount
+    val categoryColor = category?.color?.value?.toComposeColor() ?: Gray
+
+    Row(
+        modifier = Modifier
+            .padding(horizontal = 20.dp)
+            .fillMaxWidth()
+            .clickableNoIndication(rememberInteractionSource()) { onClick() },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(12.dp)
+                .clip(CircleShape)
+                .background(categoryColor)
+        )
+
+        Spacer(Modifier.width(12.dp))
+
+        Text(
+            modifier = Modifier.weight(1f),
+            text = category?.name?.value ?: stringResource(R.string.unspecified),
+            style = UI.typo.b2.style(
+                fontWeight = FontWeight.SemiBold,
+                color = UI.colors.pureInverse
+            ),
+            maxLines = 1
+        )
+
+        Spacer(Modifier.width(8.dp))
+
+        Text(
+            text = if (totalAmount != 0.0) {
+                "${((amount / totalAmount) * 100).format(1)}%"
+            } else {
+                "0%"
+            },
+            style = UI.typo.nB2.style(
+                color = Gray,
+                fontWeight = FontWeight.Normal
+            )
+        )
+
+        Spacer(Modifier.width(8.dp))
+
+        Text(
+            text = "${amount.format(2)} $baseCurrency",
+            style = UI.typo.nB2.style(
+                fontWeight = FontWeight.ExtraBold,
+                color = UI.colors.pureInverse
+            )
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Existing composables (unchanged)
+// ---------------------------------------------------------------------------
+
 @Composable
 private fun NoFilterEmptyState(
     setFilterOverlayVisible: (Boolean) -> Unit
@@ -414,6 +621,20 @@ private fun Preview(theme: Theme = Theme.LIGHT) {
             id = CategoryId(UUID.randomUUID()),
             orderNum = 0.0,
         )
+        val cat2 = Category(
+            name = NotBlankTrimmedString.unsafe("Pet"),
+            color = ColorInt(Red3Light.toArgb()),
+            icon = IconAsset.unsafe("pet"),
+            id = CategoryId(UUID.randomUUID()),
+            orderNum = 0.0,
+        )
+        val cat3 = Category(
+            name = NotBlankTrimmedString.unsafe("Home"),
+            color = ColorInt(Green.toArgb()),
+            icon = null,
+            id = CategoryId(UUID.randomUUID()),
+            orderNum = 0.0,
+        )
         val state = ReportScreenState(
             baseCurrency = "BGN",
             balance = -6405.66,
@@ -423,8 +644,7 @@ private fun Preview(theme: Theme = Theme.LIGHT) {
             upcomingExpenses = 0.0,
             overdueIncome = 2335.12,
             overdueExpenses = 0.0,
-            history =
-            persistentListOf(),
+            history = persistentListOf(),
             upcomingTransactions = persistentListOf(),
             overdueTransactions = persistentListOf(),
 
@@ -440,20 +660,15 @@ private fun Preview(theme: Theme = Theme.LIGHT) {
             ),
             categories = persistentListOf(
                 cat1,
-                Category(
-                    name = NotBlankTrimmedString.unsafe("Pet"),
-                    color = ColorInt(Red3Light.toArgb()),
-                    icon = IconAsset.unsafe("pet"),
-                    id = CategoryId(UUID.randomUUID()),
-                    orderNum = 0.0,
-                ),
-                Category(
-                    name = NotBlankTrimmedString.unsafe("Home"),
-                    color = ColorInt(Green.toArgb()),
-                    icon = null,
-                    id = CategoryId(UUID.randomUUID()),
-                    orderNum = 0.0,
-                ),
+                cat2,
+                cat3,
+            ),
+            expenseCategoryAmounts = persistentListOf(
+                CategoryAmount(category = cat1, amount = 5405.66),
+                CategoryAmount(category = cat2, amount = 3000.0),
+            ),
+            incomeCategoryAmounts = persistentListOf(
+                CategoryAmount(category = cat3, amount = 2000.0),
             ),
         )
 
