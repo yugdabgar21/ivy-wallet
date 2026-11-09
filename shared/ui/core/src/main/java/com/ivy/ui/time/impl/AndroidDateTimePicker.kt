@@ -2,6 +2,7 @@ package com.ivy.ui.time.impl
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
@@ -21,6 +22,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import com.ivy.base.time.TimeConverter
 import com.ivy.base.time.TimeProvider
@@ -55,8 +63,10 @@ class AndroidDateTimePicker @Inject constructor(
             initialSelectedDateMillis = viewState.initialDate?.toEpochMilli(),
         )
         DatePickerDialog(
-            modifier = modifier,
+            modifier = modifier.glassPickerBorder(),
             onDismissRequest = { datePickerViewState = null },
+            shape = RoundedCornerShape(PICKER_CORNER_RADIUS),
+            tonalElevation = 0.dp,
             confirmButton = {
                 ConfirmButton(onClick = {
                     datePickerViewState = null
@@ -67,12 +77,13 @@ class AndroidDateTimePicker @Inject constructor(
                 })
             },
             colors = DatePickerDefaults.colors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                containerColor = pickerContainerColor(),
             )
         ) {
             DatePicker(
                 state = pickerState,
                 colors = DatePickerDefaults.colors(
+                    containerColor = pickerContainerColor(),
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
                     selectedDayContainerColor = MaterialTheme.colorScheme.primary,
                     todayContentColor = MaterialTheme.colorScheme.onBackground,
@@ -95,8 +106,10 @@ class AndroidDateTimePicker @Inject constructor(
             initialMinute = time.minute,
         )
         DatePickerDialog(
-            modifier = modifier,
+            modifier = modifier.glassPickerBorder(),
             onDismissRequest = { timePickerViewState = null },
+            shape = RoundedCornerShape(PICKER_CORNER_RADIUS),
+            tonalElevation = 0.dp,
             confirmButton = {
                 ConfirmButton(
                     onClick = {
@@ -108,7 +121,7 @@ class AndroidDateTimePicker @Inject constructor(
                 )
             },
             colors = DatePickerDefaults.colors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                containerColor = pickerContainerColor(),
             )
         ) {
             Box(modifier = Modifier.align(Alignment.CenterHorizontally)) {
@@ -162,4 +175,44 @@ class AndroidDateTimePicker @Inject constructor(
         val initialTime: LocalTime?,
         val onTimePicked: (LocalTime) -> Unit
     )
+}
+
+private val PICKER_CORNER_RADIUS = 28.dp
+
+/**
+ * Real backdrop blur is not possible for these dialogs: Compose renders them in their own window,
+ * so the app's RenderNode glass engine cannot sample the content behind them. A translucent,
+ * rounded surface with a hairline highlight is the safe glass-like treatment.
+ */
+@Composable
+private fun pickerContainerColor(): Color =
+    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.86f)
+
+@Composable
+private fun Modifier.glassPickerBorder(): Modifier {
+    val borderBrush = Brush.verticalGradient(
+        colors = listOf(
+            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.22f),
+            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+        )
+    )
+
+    return drawWithContent {
+        drawContent()
+
+        val strokeWidth = 1.dp.toPx()
+        val inset = strokeWidth / 2f
+        drawRoundRect(
+            brush = borderBrush,
+            topLeft = Offset(inset, inset),
+            size = Size(
+                width = (size.width - strokeWidth).coerceAtLeast(0f),
+                height = (size.height - strokeWidth).coerceAtLeast(0f),
+            ),
+            cornerRadius = CornerRadius(
+                x = (PICKER_CORNER_RADIUS.toPx() - inset).coerceAtLeast(0f)
+            ),
+            style = Stroke(width = strokeWidth),
+        )
+    }
 }

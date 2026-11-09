@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
@@ -135,7 +136,9 @@ fun BoxWithConstraintsScope.EditBottomSheet(
     val glassFraction = VisualEffectsIntensity.fraction(glassIntensity)
     val realGlass = backdrop != null && sheetGlassEnabled && glassFraction > 0f
     val panelBaseColor = when {
-        realGlass -> UI.colors.pure.copy(alpha = 0.34f + 0.08f * glassFraction)
+        // A large sheet needs a stronger tint than the small nav pill, otherwise the blurred
+        // content underneath stays too legible and reads as bleed-through.
+        realGlass -> UI.colors.pure.copy(alpha = 0.62f + 0.12f * glassFraction)
         sheetGlassEnabled -> UI.colors.pure.copy(alpha = 0.86f)
         else -> pureBlur()
     }
@@ -208,23 +211,26 @@ fun BoxWithConstraintsScope.EditBottomSheet(
             .fillMaxWidth()
             .statusBarsPadding()
             .padding(top = 24.dp)
-//            .drawColoredShadow(
-//                color = UI.colors.mediumInverse,
-//                alpha = if (UI.colors.isLight) 0.3f else 0.2f,
-//                borderRadius = 24.dp,
-//                shadowRadius = 24.dp
-//            )
+            .shadow(
+                elevation = if (sheetGlassEnabled) 16.dp else 8.dp,
+                shape = panelShape,
+                clip = false,
+            )
+            .clip(panelShape)
             .thenIf(realGlass) {
                 liquidGlassPanel(
                     backdrop = backdrop!!,
                     shape = panelShape,
                     cornerRadius = 24.dp,
-                    blurRadius = LiquidGlassDefaults.BlurRadius,
-                    refraction = true,
+                    // A larger surface needs more blur than the small nav pill. Refraction is
+                    // disabled here: on a full-width sheet it warps the content instead of
+                    // looking like a clean frosted panel.
+                    blurRadius = LiquidGlassDefaults.BlurRadius * 1.5f,
+                    refraction = false,
                     intensity = glassFraction,
                 )
             }
-            .background(panelBaseColor, UI.shapes.r2Top)
+            .background(panelBaseColor, panelShape)
             .thenIf(sheetGlassEnabled) {
                 background(panelOverlay!!, panelShape)
             }

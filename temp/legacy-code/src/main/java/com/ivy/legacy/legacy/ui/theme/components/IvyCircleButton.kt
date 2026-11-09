@@ -35,6 +35,7 @@ fun IvyCircleButton(
     enabled: Boolean = true,
     hasShadow: Boolean = true,
     glassBorder: Color? = null,
+    contentDescription: String? = "circle button",
     onClick: () -> Unit
 ) {
     val resolvedGlassBorder = glassBorder ?: Color.Transparent
@@ -71,7 +72,7 @@ fun IvyCircleButton(
             .padding(all = backgroundPadding),
         icon = icon,
         tint = tint,
-        contentDescription = "circle button"
+        contentDescription = contentDescription
     )
 }
 

@@ -40,8 +40,6 @@ class VisualEffectsIntensityTest {
                 VisualEffectsIntensity.borderAlpha(lower)) shouldBe true
             (VisualEffectsIntensity.shadowElevationDp(higher) >=
                 VisualEffectsIntensity.shadowElevationDp(lower)) shouldBe true
-            (VisualEffectsIntensity.scrollTranslationMultiplier(higher) >
-                VisualEffectsIntensity.scrollTranslationMultiplier(lower)) shouldBe true
         }
     }
 

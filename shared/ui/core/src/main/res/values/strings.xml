@@ -510,6 +510,4 @@
     <string name="visual_effects_settings_panels">Settings panels</string>
     <string name="visual_effects_intensity">Glass effect intensity</string>
     <string name="visual_effects_intensity_description">0% keeps the classic look, 100% is the richest glass styling.</string>
-    <string name="visual_effects_scroll_animations">Scroll animation</string>
-    <string name="visual_effects_scroll_animations_description">Gently moves the home header while you scroll. Turn off to save battery.</string>
 </resources>

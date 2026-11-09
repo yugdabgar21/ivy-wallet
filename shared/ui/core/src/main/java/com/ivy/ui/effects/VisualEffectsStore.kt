@@ -36,7 +36,6 @@ data class VisualEffectsState(
     val bottomSheets: Boolean = true,
     val dialogs: Boolean = true,
     val settingsPanels: Boolean = true,
-    val scrollAnimations: Boolean = true,
     val intensity: Int = VisualEffectsIntensity.DEFAULT,
 ) {
     fun isComponentEnabled(component: VisualEffectComponent): Boolean {
@@ -75,11 +74,6 @@ object VisualEffectsIntensity {
     fun borderAlpha(value: Int): Float = 0.30f * fraction(value)
 
     fun shadowElevationDp(value: Int): Int = (14f * fraction(value)).roundToInt()
-
-    /**
-     * How far the home header shifts per scrolled pixel when the optional scroll animation is on.
-     */
-    fun scrollTranslationMultiplier(value: Int): Float = 0.10f + 0.20f * fraction(value)
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -137,11 +131,6 @@ class VisualEffectsStore @Inject constructor(
     )
         private set
 
-    var scrollAnimationsEnabled by mutableStateOf(
-        sharedPrefs.getBoolean(SharedPrefs.VISUAL_EFFECTS_SCROLL_ANIMATIONS, true)
-    )
-        private set
-
     var intensity by mutableIntStateOf(
         VisualEffectsIntensity.clamp(
             sharedPrefs.getInt(
@@ -174,7 +163,6 @@ class VisualEffectsStore @Inject constructor(
         bottomSheets = bottomSheetsEnabled,
         dialogs = dialogsEnabled,
         settingsPanels = settingsPanelsEnabled,
-        scrollAnimations = scrollAnimationsEnabled,
         intensity = intensity,
     )
 
@@ -220,11 +208,6 @@ class VisualEffectsStore @Inject constructor(
                 sharedPrefs.putBoolean(SharedPrefs.VISUAL_EFFECTS_SETTINGS_PANELS, value)
             }
         }
-    }
-
-    fun setScrollAnimations(value: Boolean) {
-        scrollAnimationsEnabled = value
-        sharedPrefs.putBoolean(SharedPrefs.VISUAL_EFFECTS_SCROLL_ANIMATIONS, value)
     }
 
     fun setIntensityLevel(value: Int) {

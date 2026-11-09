@@ -146,9 +146,6 @@ fun BoxWithConstraintsScope.SettingsScreen() {
         onSetVisualEffectsIntensity = {
             viewModel.onEvent(SettingsEvent.SetVisualEffectsIntensity(it))
         },
-        onSetScrollAnimationsEnabled = {
-            viewModel.onEvent(SettingsEvent.SetScrollAnimationsEnabled(it))
-        },
         onDeleteAllUserData = {
             viewModel.onEvent(SettingsEvent.DeleteAllUserData)
         },
@@ -191,7 +188,6 @@ private fun BoxWithConstraintsScope.UI(
     onSetVisualEffectsEnabled: (Boolean) -> Unit = {},
     onSetVisualEffect: (VisualEffectComponent, Boolean) -> Unit = { _, _ -> },
     onSetVisualEffectsIntensity: (Int) -> Unit = {},
-    onSetScrollAnimationsEnabled: (Boolean) -> Unit = {},
     onDeleteAllUserData: () -> Unit = {},
     onDeleteCloudUserData: () -> Unit = {},
     onSwitchLanguage: () -> Unit = {}
@@ -522,19 +518,6 @@ private fun BoxWithConstraintsScope.UI(
                 VisualEffectsIntensityControl(
                     intensity = visualEffects.intensity,
                     onSetIntensity = onSetVisualEffectsIntensity
-                )
-
-                Spacer(Modifier.height(12.dp))
-
-                AppSwitch(
-                    lockApp = visualEffects.scrollAnimations,
-                    onSetLockApp = onSetScrollAnimationsEnabled,
-                    text = stringResource(R.string.visual_effects_scroll_animations),
-                    description = stringResource(
-                        R.string.visual_effects_scroll_animations_description
-                    ),
-                    icon = R.drawable.ic_custom_programming_m,
-                    testTag = "visual_effects_scroll_animations"
                 )
             }
         }

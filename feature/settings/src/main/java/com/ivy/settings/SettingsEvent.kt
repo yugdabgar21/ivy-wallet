@@ -27,5 +27,4 @@ sealed interface SettingsEvent {
     ) : SettingsEvent
 
     data class SetVisualEffectsIntensity(val intensity: Int) : SettingsEvent
-    data class SetScrollAnimationsEnabled(val enabled: Boolean) : SettingsEvent
 }

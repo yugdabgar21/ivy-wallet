@@ -247,10 +247,6 @@ class SettingsViewModel @Inject constructor(
             is SettingsEvent.SetVisualEffectsIntensity -> {
                 visualEffectsStore.setIntensityLevel(event.intensity)
             }
-
-            is SettingsEvent.SetScrollAnimationsEnabled -> {
-                visualEffectsStore.setScrollAnimations(event.enabled)
-            }
         }
     }
 

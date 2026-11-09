@@ -36,7 +36,6 @@ class SharedPrefs @Inject constructor(
         const val VISUAL_EFFECTS_BOTTOM_SHEETS = "visual_effects_bottom_sheets"
         const val VISUAL_EFFECTS_DIALOGS = "visual_effects_dialogs"
         const val VISUAL_EFFECTS_SETTINGS_PANELS = "visual_effects_settings_panels"
-        const val VISUAL_EFFECTS_SCROLL_ANIMATIONS = "visual_effects_scroll_animations"
         const val VISUAL_EFFECTS_INTENSITY = "visual_effects_intensity"
         // ----------------------------- Visual Effects --------------------------------------------
 
