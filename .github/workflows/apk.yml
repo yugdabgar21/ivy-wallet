@@ -45,8 +45,8 @@ jobs:
           if-no-files-found: error
 
   demo_apk:
-    name: Demo APK (main only)
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    name: Optimized APK
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/glass-nav-compact')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout GIT
@@ -61,17 +61,21 @@ jobs:
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest
+
       - name: Build Demo APK
         run: ./gradlew assembleDemo
 
       - name: Upload Demo APK
         uses: actions/upload-artifact@v4
         with:
-          name: Ivy-Wallet-Demo.apk
+          name: Ivy-Wallet-Optimized-APK
           path: app/build/outputs/apk/demo/app-demo.apk
           if-no-files-found: error
 
       - name: Upload APK in Telegram Group
+        if: github.ref == 'refs/heads/main'
         continue-on-error: true
         run: |
           COMMIT_LINK="https://github.com/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}"
