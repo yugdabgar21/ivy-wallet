@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.viewModelScope
+import arrow.core.toOption
 import com.ivy.base.legacy.LegacyTransaction
 import com.ivy.base.legacy.TransactionHistoryItem
 import com.ivy.base.legacy.stringRes
@@ -683,7 +684,7 @@ class ReportViewModel @Inject constructor(
                     ExchangeAct.Input(
                         data = ExchangeData(
                             baseCurrency = baseCurrency,
-                            fromCurrency = fromCurrency
+                            fromCurrency = fromCurrency.toOption()
                         ),
                         amount = amount
                     )

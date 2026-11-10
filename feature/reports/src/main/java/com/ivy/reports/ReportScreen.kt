@@ -55,7 +55,6 @@ import com.ivy.navigation.ReportScreen
 import com.ivy.navigation.navigation
 import com.ivy.piechart.CategoryAmount
 import com.ivy.piechart.PieChart
-import com.ivy.piechart.SelectedCategory
 import com.ivy.ui.R
 import com.ivy.ui.rememberScrollPositionListState
 import com.ivy.wallet.domain.pure.data.IncomeExpensePair
