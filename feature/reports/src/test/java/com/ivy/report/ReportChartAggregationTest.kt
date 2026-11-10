@@ -82,7 +82,7 @@ class ReportChartAggregationTest {
     }
 
     @Test
-    fun `empty transactions returns empty chart list`() = runBlocking {
+    fun `empty transactions returns empty chart list`(): Unit = runBlocking {
         val result = ReportChartDataCalculator.computeCategoryChartData(
             legacyTrns = emptyList(),
             type = TransactionType.EXPENSE,
@@ -98,7 +98,7 @@ class ReportChartAggregationTest {
     }
 
     @Test
-    fun `single category returns 100 percent aggregation`() = runBlocking {
+    fun `single category returns 100 percent aggregation`(): Unit = runBlocking {
         val trn = legacyTrn(
             type = TransactionType.EXPENSE,
             amount = 150.0,
@@ -124,7 +124,7 @@ class ReportChartAggregationTest {
     }
 
     @Test
-    fun `multiple categories are aggregated and sorted descending by amount`() = runBlocking {
+    fun `multiple categories are aggregated and sorted descending by amount`(): Unit = runBlocking {
         val trns = listOf(
             legacyTrn(TransactionType.EXPENSE, 50.0, category1.id.value),
             legacyTrn(TransactionType.EXPENSE, 200.0, category2.id.value),
@@ -155,7 +155,7 @@ class ReportChartAggregationTest {
     }
 
     @Test
-    fun `unspecified category is handled correctly when categoryId is null`() = runBlocking {
+    fun `unspecified category is handled correctly when categoryId is null`(): Unit = runBlocking {
         val trns = listOf(
             legacyTrn(TransactionType.EXPENSE, 100.0, categoryId = null),
             legacyTrn(TransactionType.EXPENSE, 40.0, category1.id.value)
@@ -179,7 +179,7 @@ class ReportChartAggregationTest {
     }
 
     @Test
-    fun `transfers toggle OFF ignores transfer transactions`() = runBlocking {
+    fun `transfers toggle OFF ignores transfer transactions`(): Unit = runBlocking {
         val trns = listOf(
             legacyTrn(TransactionType.EXPENSE, 100.0, category1.id.value),
             legacyTrn(
@@ -207,7 +207,7 @@ class ReportChartAggregationTest {
     }
 
     @Test
-    fun `transfers toggle ON includes transfers in expense and income charts`() = runBlocking {
+    fun `transfers toggle ON includes transfers in expense and income charts`(): Unit = runBlocking {
         val trns = listOf(
             legacyTrn(TransactionType.EXPENSE, 100.0, category1.id.value),
             legacyTrn(TransactionType.INCOME, 300.0, category2.id.value),
@@ -255,7 +255,7 @@ class ReportChartAggregationTest {
     }
 
     @Test
-    fun `currency exchange is correctly applied to foreign currency transactions`() = runBlocking {
+    fun `currency exchange is correctly applied to foreign currency transactions`(): Unit = runBlocking {
         val trn = legacyTrn(
             type = TransactionType.EXPENSE,
             amount = 100.0,
